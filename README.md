@@ -1,8 +1,21 @@
 # keycloak-config-sync
-// TODO(user): Add simple overview of use/purpose
+
+[![Powered By: Edenlab](https://img.shields.io/badge/powered%20by-edenlab-8A2BE2.svg?style=for-the-badge)](https://edenlab.io)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+Keycloak Operator is operator responsible for configuring existing Keycloak instances. The operator runs both on OpenShift and Kubernetes.
+
+_**NOTE:** Operator is platform-independent, which is why there is a unified instruction for deployment._
+
+
+## Prerequisites
+
+1. Linux machine or Windows Subsystem for Linux instance with [Helm 3](https://helm.sh/docs/intro/install/) installed;
+2. Cluster admin access to the cluster;
+3. [cert-manager](https://cert-manager.io/docs/installation/) installed in the cluster (required for webhook functionality, can be disabled via `enableWebhooks: false`);
+
 
 ## Getting Started
 
@@ -97,7 +110,7 @@ kubectl apply -f https://raw.githubusercontent.com/<org>/keycloak-config-sync/<t
 1. Build the chart using the optional helm plugin
 
 ```sh
-kubebuilder edit --plugins=helm/v2-alpha
+kubebuilder edit --plugins=helm/v1-alpha
 ```
 
 2. See that a chart was generated under 'dist/chart', and users
@@ -111,8 +124,6 @@ previously added to 'dist/chart/values.yaml' or 'dist/chart/manager/manager.yaml
 is manually re-applied afterwards.
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
 **NOTE:** Run `make help` for more information on all potential `make` targets
 
 More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
