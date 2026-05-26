@@ -69,7 +69,6 @@ make lint-fix # run golangci-lint (config: .golangci.yaml) with auto-fix where p
 make generate                                               # DeepCopy methods (kubebuilder markers)
 make manifests                                              # CRDs, RBAC, webhooks → config/
 make mocks                                                  # test mocks via mockery
-KEYCLOAK_VERSION=26.5.2 make generate-keycloak-go-client   # regenerate oapi client (rare)
 ```
 
 ## Conventions
@@ -86,6 +85,3 @@ Edit `pkg/client/keycloakv2/openapi.yaml` then re-run `make generate-keycloak-go
 ### keycloakv2 migration
 Controllers are being migrated from `pkg/client/keycloak/` (gocloak v12) to `pkg/client/keycloakv2/`.
 When modifying a controller, prefer migrating it to the new client if not done already.
-
-## Further Reading
-- `docs/development.md` — local setup, debugging, VS Code config
