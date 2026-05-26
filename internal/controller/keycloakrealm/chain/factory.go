@@ -1,0 +1,56 @@
+package chain
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/handler"
+	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
+)
+
+var log = ctrl.Log.WithName("realm_handler")
+
+func CreateDefChain(k8sClient client.Client, scheme *runtime.Scheme) handler.RealmHandler {
+	return PutRealm{
+		client: k8sClient,
+		next: SetLabels{
+			client: k8sClient,
+			next: PutUsers{
+				next: PutUsersRoles{
+					next: RealmSettings{
+						next: RealmLocalizationTexts{
+							next: AuthFlow{
+								next: UserProfile{
+									next: ConfigureEmail{
+										client: k8sClient,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func nextServeOrNil(ctx context.Context, next handler.RealmHandler, realm *keycloakApi.KeycloakRealm, kClientV2 *keycloakv2.KeycloakClient) error {
+	if next != nil {
+		err := next.ServeRequest(ctx, realm, kClientV2)
+		if err != nil {
+			return fmt.Errorf("chain failed %s: %w", reflect.TypeOf(next).Name(), err)
+		}
+
+		return nil
+	}
+
+	log.Info("handling of realm has been finished", "realm name", realm.Spec.RealmName)
+
+	return nil
+}

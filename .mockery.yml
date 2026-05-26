@@ -1,0 +1,32 @@
+dir: '{{.InterfaceDir}}/mocks'
+structname: Mock{{.InterfaceName}}
+pkgname: mocks
+template: testify
+filename: "{{ .InterfaceName | snakecase }}_generated.mock.go"
+template-data:
+  unroll-variadic: true
+packages:
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak":
+    interfaces:
+      Client: {}
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter":
+    interfaces:
+      GoCloak: {}
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2":
+    interfaces:
+      RealmClient: {}
+      UsersClient: {}
+      GroupsClient: {}
+      RolesClient: {}
+      ClientsClient: {}
+      OrganizationsClient: {}
+      IdentityProvidersClient: {}
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/secretref":
+    interfaces:
+      RefClient: {}
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper":
+    interfaces:
+      ControllerHelper: {}
+  "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/handler":
+    interfaces:
+      RealmHandler: {}

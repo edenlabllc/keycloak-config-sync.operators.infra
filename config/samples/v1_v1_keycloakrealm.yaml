@@ -1,0 +1,83 @@
+apiVersion: v1.edp.edenlab.io/v1
+kind: KeycloakRealm
+metadata:
+  name: keycloakrealm-sample
+spec:
+  id: d1-id-kc-realm-name
+  realmName: d2-id-kc-realm-name
+  organizationsEnabled: true
+  keycloakRef:
+    name: keycloak-sample
+    kind: Keycloak
+  passwordPolicy:
+    - type: "forceExpiredPasswordChange"
+      value: "365"
+    - type: "length"
+      value: "8"
+  realmEventConfig:
+    adminEventsDetailsEnabled: false
+    adminEventsEnabled: true
+    enabledEventTypes:
+      - UPDATE_CONSENT_ERROR
+      - CLIENT_LOGIN
+    eventsEnabled: true
+    eventsExpiration: 15000
+    eventsListeners:
+      - jboss-logging
+  userProfileConfig:
+    unmanagedAttributePolicy: "ENABLED"
+    attributes:
+      - name: "test-attribute"
+        displayName: "Test Attribute"
+        required:
+          roles:
+            - "admin"
+          scopes:
+            - "profile"
+        multivalued: true
+        group: "test-group"
+        permissions:
+          edit:
+            - "admin"
+          view:
+            - "admin"
+            - "user"
+        selector:
+          scopes:
+            - "profile"
+        annotations:
+          inputType: "text"
+        validations:
+          email:
+            max-local-length:
+              intVal: 64
+          local-date: { }
+          options:
+            options:
+              sliceVal:
+                - "option1"
+                - "option2"
+          multivalued:
+            min:
+              stringVal: "1"
+            max:
+              stringVal: "10"
+    groups:
+      - name: "test-group"
+        displayDescription: "Test Group"
+        displayHeader: "Test Group"
+        annotations:
+          groupAnnotation: "groupAnnotation"
+  sessions:
+    ssoLoginSettings:
+      accessCodeLifespanLogin: 1800      # 30 minutes
+      accessCodeLifespanUserAction: 300  # 5 minutes
+    ssoSessionSettings:
+      idleTimeout: 1800                  # 30 minutes
+      idleTimeoutRememberMe: 604800      # 7 days
+      maxLifespan: 36000                 # 10 hours
+      maxLifespanRememberMe: 2592000     # 30 days
+    ssoOfflineSessionSettings:
+      idleTimeout: 2592000               # 30 days
+      maxLifespan: 5184000               # 60 days
+      maxLifespanEnabled: true

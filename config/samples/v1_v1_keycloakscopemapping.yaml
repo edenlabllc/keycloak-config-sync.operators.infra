@@ -1,0 +1,12 @@
+apiVersion: v1.edp.edenlab.io/v1
+kind: KeycloakScopeMapping
+metadata:
+  name: keycloakscopemapping-sample
+spec:
+  realmRef:
+    name: keycloakrealm-sample
+    kind: KeycloakRealm
+  clientScope: "offline_access"
+  description: "scope mapping offline_access with relm role offline_access"
+  roles:
+    - name: "offline_access"

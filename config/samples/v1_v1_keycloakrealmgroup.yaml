@@ -1,0 +1,23 @@
+apiVersion: v1.edp.edenlab.io/v1
+kind: KeycloakRealmGroup
+metadata:
+  name: keycloakrealmgroup-sample
+spec:
+  name: ArgoCDAdmins
+  description: "This group is for ArgoCD administrators."
+  realmRef:
+    name: keycloakrealm-sample
+    kind: KeycloakRealm
+---
+# Example of a child group using parentGroup
+apiVersion: v1.edp.edenlab.io/v1
+kind: KeycloakRealmGroup
+metadata:
+  name: keycloakrealmgroup-child-sample
+spec:
+  name: ArgoCDDevelopers
+  parentGroup:
+    name: keycloakrealmgroup-sample
+  realmRef:
+    name: keycloakrealm-sample
+    kind: KeycloakRealm

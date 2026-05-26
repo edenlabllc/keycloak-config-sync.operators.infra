@@ -1,0 +1,35 @@
+package chain
+
+import (
+	"context"
+	"fmt"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
+)
+
+type AuthFlow struct{}
+
+func NewAuthFlow() *AuthFlow {
+	return &AuthFlow{}
+}
+
+func (a AuthFlow) ServeRequest(ctx context.Context, realm *keycloakApi.ClusterKeycloakRealm, kClientV2 *keycloakv2.KeycloakClient) error {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("Start configuring authentication flow")
+
+	if realm.Spec.AuthenticationFlow == nil || realm.Spec.AuthenticationFlow.BrowserFlow == "" {
+		log.Info("Authentication flow is not provided, skip configuring")
+		return nil
+	}
+
+	if _, err := kClientV2.Realms.SetRealmBrowserFlow(ctx, realm.Spec.RealmName, realm.Spec.AuthenticationFlow.BrowserFlow); err != nil {
+		return fmt.Errorf("setting realm browser flow: %w", err)
+	}
+
+	log.Info("Authentication flow has been configured")
+
+	return nil
+}

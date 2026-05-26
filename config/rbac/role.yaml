@@ -1,0 +1,143 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - v1
+  resources:
+  - configmap
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - clusterkeycloakrealms
+  - clusterkeycloaks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - clusterkeycloakrealms/finalizers
+  - clusterkeycloaks/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - clusterkeycloakrealms/status
+  - clusterkeycloaks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - keycloakrealms
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: manager-role
+  namespace: keycloak
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1
+  resources:
+  - configmap
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - keycloakauthflows
+  - keycloakclients
+  - keycloakclientscopemappings
+  - keycloakclientscopes
+  - keycloakorganizations
+  - keycloakrealmcomponents
+  - keycloakrealmgroups
+  - keycloakrealmidentityproviders
+  - keycloakrealmrolebatches
+  - keycloakrealmroles
+  - keycloakrealms
+  - keycloakrealmusers
+  - keycloaks
+  - keycloakscopemappings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - keycloakauthflows/finalizers
+  - keycloakclients/finalizers
+  - keycloakclientscopemappings/finalizers
+  - keycloakclientscopes/finalizers
+  - keycloakorganizations/finalizers
+  - keycloakrealmcomponents/finalizers
+  - keycloakrealmgroups/finalizers
+  - keycloakrealmidentityproviders/finalizers
+  - keycloakrealmrolebatches/finalizers
+  - keycloakrealmroles/finalizers
+  - keycloakrealms/finalizers
+  - keycloakrealmusers/finalizers
+  - keycloaks/finalizers
+  - keycloakscopemappings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - v1.edp.edenlab.io
+  resources:
+  - keycloakauthflows/status
+  - keycloakclients/status
+  - keycloakclientscopemappings/status
+  - keycloakclientscopes/status
+  - keycloakorganizations/status
+  - keycloakrealmcomponents/status
+  - keycloakrealmgroups/status
+  - keycloakrealmidentityproviders/status
+  - keycloakrealmrolebatches/status
+  - keycloakrealmroles/status
+  - keycloakrealms/status
+  - keycloakrealmusers/status
+  - keycloaks/status
+  - keycloakscopemappings/status
+  verbs:
+  - get
+  - patch
+  - update
