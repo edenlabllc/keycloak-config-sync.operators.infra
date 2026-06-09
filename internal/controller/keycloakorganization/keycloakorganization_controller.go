@@ -21,10 +21,7 @@ import (
 )
 
 type Helper interface {
-	CreateKeycloakClientV2FromRealmRef(
-		ctx context.Context,
-		object helper.ObjectWithRealmRef,
-	) (*keycloakv2.KeycloakClient, error)
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
 	GetRealmNameFromRef(
 		ctx context.Context,
 		object helper.ObjectWithRealmRef,
@@ -56,9 +53,9 @@ func (r *ReconcileOrganization) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakorganizations,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakorganizations/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakorganizations/finalizers,verbs=update
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakorganizations,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakorganizations/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakorganizations/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",namespace=keycloak,resources=secrets,verbs=get;list;watch
 
 // Reconcile is a loop for reconciling Organization object.
@@ -94,7 +91,7 @@ func (r *ReconcileOrganization) initializeReconciliation(ctx context.Context, re
 		return nil, nil, "", fmt.Errorf("failed to get KeycloakOrganization: %w", err)
 	}
 
-	kClientV2, err := r.helper.CreateKeycloakClientV2FromRealmRef(ctx, organization)
+	kClientV2, err := r.helper.CreateKeycloakClientV2FromConfigRef(ctx, organization)
 	if err != nil {
 		if errors.Is(err, helper.ErrKeycloakRealmNotFound) {
 			if organization.GetDeletionTimestamp() != nil {

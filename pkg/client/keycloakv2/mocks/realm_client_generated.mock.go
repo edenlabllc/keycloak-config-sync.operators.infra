@@ -16,8 +16,7 @@ import (
 func NewMockRealmClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockRealmClient {
+}) *MockRealmClient {
 	mock := &MockRealmClient{}
 	mock.Mock.Test(t)
 

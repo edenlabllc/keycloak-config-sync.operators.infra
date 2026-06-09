@@ -1,0 +1,98 @@
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: ksa-ehealth-service-account-ehealth-portal-user
+  namespace: keycloak
+  annotations:
+    # skip resource delete
+    "idp.edenlab.io/preserve-resources-no-delete": "true"
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+    # Name specifies the name of the Keycloak resource.
+    name: ksa-ehealth
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Attributes is a map of user attributes. Deprecated: Use AttributesV2 instead.
+  # attributes:
+  #   key: "value"
+
+  # AttributesV2 is a map of service account attributes. Each attribute can have multiple values.
+  attributesV2:
+    phoneNumber:
+      - "+380632619040"
+    preferredLanguage:
+      - "en"
+
+  # ClientRoles is a list of client roles assigned to user.
+  clientRoles:
+    - clientId: ehealth-portal
+      roles:
+        - "uma_protection"
+
+  # Email is a user email.
+  email: ""
+
+  # EmailVerified is a user email verified flag.
+  emailVerified: false
+
+  # Enabled is a user enabled flag.
+  enabled: true
+
+  # FirstName is a user first name.
+  firstName: ""
+
+  # KeepResource, when set to false, results in the deletion of the KeycloakRealmUser Custom Resource (CR)
+  # from the cluster after the corresponding user is created in Keycloak.
+  # The user will continue to exist in Keycloak. When set to true, the CR will not be deleted after processing.
+  #
+  # Default: true
+  keepResource: true
+
+  # LastName is a user last name.
+  lastName: Last-Name
+
+  # Username is a username in keycloak.
+  username: 'service-account-ehealth-portal'
+
+  # Roles is a list of roles assigned to user.
+  roles:
+    - "default-roles-ksa-ehealth"
+
+  # Use OTP
+  totp: false
+
+  # Groups is a list of groups assigned to user. Each entry is either a plain group name (e.g. "developers")
+  # or a slash-separated path (e.g. "/developers", "/parent/child"),
+  # where each segment represents a level in the group hierarchy.
+  groups: []
+
+  # IdentityProviders is a list of identity providers aliases linked to the user.
+  identityProviders: []
+
+  # Password is a user password. Allows to keep user password within Custom Resource.
+  # For security concerns, it is recommended to use PasswordSecret instead.
+  # password: ""
+
+  # PasswordSecret defines Kubernetes secret Name and Key, which holds User secret.
+  # passwordSecret:
+  #   # Key is the key in the secret.
+  #   key: ""
+  #   # Name is the name of the secret.
+  #   name: ""
+  #   # Temporary indicates whether the password is temporary.
+  #   #
+  #   # Default: false
+  #   temporary: false

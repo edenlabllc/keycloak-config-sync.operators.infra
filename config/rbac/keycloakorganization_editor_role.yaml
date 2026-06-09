@@ -1,7 +1,7 @@
 # This rule is not used by the project edp-keycloak-operator itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
-# Grants permissions to create, update, and delete resources within the v1.edp.edenlab.io.
+# Grants permissions to create, update, and delete resources within the config.idp.edenlab.io.
 # This role is intended for users who need to manage these resources
 # but should not control RBAC or manage permissions for others.
 
@@ -14,7 +14,7 @@ metadata:
   name: organization-editor-role
 rules:
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakorganizations
   verbs:
@@ -26,7 +26,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakorganizations/status
   verbs:

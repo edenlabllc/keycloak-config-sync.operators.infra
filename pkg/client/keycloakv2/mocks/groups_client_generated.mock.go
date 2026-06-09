@@ -16,8 +16,7 @@ import (
 func NewMockGroupsClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockGroupsClient {
+}) *MockGroupsClient {
 	mock := &MockGroupsClient{}
 	mock.Mock.Test(t)
 

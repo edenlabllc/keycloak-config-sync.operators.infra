@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakauthflow/chain"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
@@ -30,7 +30,7 @@ const legacyFinalizerName = "keycloak.authflow.operator.finalizer.name"
 type Helper interface {
 	SetRealmOwnerRef(ctx context.Context, object helper.ObjectWithRealmRef) error
 	GetRealmNameFromRef(ctx context.Context, object helper.ObjectWithRealmRef) (string, error)
-	CreateKeycloakClientV2FromRealmRef(ctx context.Context, object helper.ObjectWithRealmRef) (*keycloakv2.KeycloakClient, error)
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
 }
 
 func NewReconcile(k8sClient client.Client, controllerHelper Helper) *Reconcile {
@@ -48,7 +48,7 @@ type Reconcile struct {
 
 func (r *Reconcile) SetupWithManager(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
-		For(&keycloakApi.KeycloakAuthFlow{}).
+		For(&keycloakApiAlpha.KeycloakAuthFlow{}).
 		Complete(r); err != nil {
 		return fmt.Errorf("failed to setup KeycloakAuthFlow controller: %w", err)
 	}
@@ -56,9 +56,9 @@ func (r *Reconcile) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakauthflows,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakauthflows/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakauthflows/finalizers,verbs=update
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakauthflows,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakauthflows/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakauthflows/finalizers,verbs=update
 
 // Reconcile is a loop for reconciling KeycloakAuthFlow objects.
 func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, resultErr error) {
@@ -85,8 +85,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	return r.handleReconciliation(ctx, instance, kClient, realmName)
 }
 
-func (r *Reconcile) initializeReconciliation(ctx context.Context, request reconcile.Request) (*keycloakApi.KeycloakAuthFlow, *keycloakv2.KeycloakClient, string, error) {
-	instance := &keycloakApi.KeycloakAuthFlow{}
+func (r *Reconcile) initializeReconciliation(ctx context.Context, request reconcile.Request) (*keycloakApiAlpha.KeycloakAuthFlow, *keycloakv2.KeycloakClient, string, error) {
+	instance := &keycloakApiAlpha.KeycloakAuthFlow{}
 	if err := r.client.Get(ctx, request.NamespacedName, instance); err != nil {
 		if k8sErrors.IsNotFound(err) {
 			return nil, nil, "", nil
@@ -99,7 +99,7 @@ func (r *Reconcile) initializeReconciliation(ctx context.Context, request reconc
 		return nil, nil, "", fmt.Errorf("unable to set realm owner ref: %w", err)
 	}
 
-	kClient, err := r.helper.CreateKeycloakClientV2FromRealmRef(ctx, instance)
+	kClient, err := r.helper.CreateKeycloakClientV2FromConfigRef(ctx, instance)
 	if err != nil {
 		if errors.Is(err, helper.ErrKeycloakRealmNotFound) && instance.GetDeletionTimestamp() != nil {
 			stop, removeErr := helper.RemoveFinalizersOnRealmNotFound(ctx, r.client, instance, common.FinalizerName, legacyFinalizerName)
@@ -123,7 +123,7 @@ func (r *Reconcile) initializeReconciliation(ctx context.Context, request reconc
 	return instance, kClient, realmName, nil
 }
 
-func (r *Reconcile) handleDeletion(ctx context.Context, instance *keycloakApi.KeycloakAuthFlow, kClient *keycloakv2.KeycloakClient, realmName string) (reconcile.Result, error) {
+func (r *Reconcile) handleDeletion(ctx context.Context, instance *keycloakApiAlpha.KeycloakAuthFlow, kClient *keycloakv2.KeycloakClient, realmName string) (reconcile.Result, error) {
 	if controllerutil.ContainsFinalizer(instance, common.FinalizerName) || controllerutil.ContainsFinalizer(instance, legacyFinalizerName) {
 		if err := chain.NewRemoveAuthFlow(kClient, r.client).Serve(ctx, instance, realmName); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to remove auth flow: %w", err)
@@ -140,7 +140,7 @@ func (r *Reconcile) handleDeletion(ctx context.Context, instance *keycloakApi.Ke
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloakApi.KeycloakAuthFlow, kClient *keycloakv2.KeycloakClient, realmName string) (reconcile.Result, error) {
+func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloakApiAlpha.KeycloakAuthFlow, kClient *keycloakv2.KeycloakClient, realmName string) (reconcile.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	if controllerutil.AddFinalizer(instance, common.FinalizerName) {
@@ -175,7 +175,7 @@ func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloak
 	return reconcile.Result{RequeueAfter: successRequeueTime}, nil
 }
 
-func (r *Reconcile) updateKeycloakAuthFlowStatus(ctx context.Context, instance *keycloakApi.KeycloakAuthFlow, oldStatus keycloakApi.KeycloakAuthFlowStatus) error {
+func (r *Reconcile) updateKeycloakAuthFlowStatus(ctx context.Context, instance *keycloakApiAlpha.KeycloakAuthFlow, oldStatus keycloakApiAlpha.KeycloakAuthFlowStatus) error {
 	if equality.Semantic.DeepEqual(&instance.Status, &oldStatus) {
 		return nil
 	}

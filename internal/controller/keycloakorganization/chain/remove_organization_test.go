@@ -51,7 +51,7 @@ func TestRemoveOrganization_ServeRequest(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "test-org",
 					Annotations: map[string]string{
-						"edp.edenlab.io/preserve-resources-on-deletion": "true",
+						"idp.edenlab.io/preserve-resources-on-deletion": "true",
 					},
 				},
 				Spec: keycloakApi.KeycloakOrganizationSpec{

@@ -6,6 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	groupChan "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/group"
+	idpChan "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/identityprovider"
+	realmChan "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/realm"
+	realmChanHandler "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/realm/handler"
+	roleChan "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/role"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -15,11 +22,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm/chain/handler"
-	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 )
 
@@ -28,8 +32,8 @@ const keyCloakRealmOperatorFinalizerName = "keycloak.realm.operator.finalizer.na
 type Helper interface {
 	SetFailureCount(fc helper.FailureCountable) time.Duration
 	TryToDelete(ctx context.Context, obj client.Object, terminator helper.Terminator, finalizer string) (isDeleted bool, resultErr error)
-	CreateKeycloakClientV2FromRealm(ctx context.Context, realm *keycloakApi.KeycloakRealm) (*keycloakv2.KeycloakClient, error)
-	SetKeycloakOwnerRef(ctx context.Context, object helper.ObjectWithKeycloakRef) error
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
+	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
 }
 
 func NewReconcileKeycloakRealm(
@@ -38,9 +42,9 @@ func NewReconcileKeycloakRealm(
 	controllerHelper Helper,
 ) *ReconcileKeycloakRealm {
 	return &ReconcileKeycloakRealm{
-		client: k8sClient,
-		helper: controllerHelper,
-		chain:  chain.CreateDefChain(k8sClient, scheme),
+		client:    k8sClient,
+		helper:    controllerHelper,
+		realmChan: realmChan.CreateDefChain(k8sClient, scheme),
 	}
 }
 
@@ -48,7 +52,7 @@ func NewReconcileKeycloakRealm(
 type ReconcileKeycloakRealm struct {
 	client                  client.Client
 	helper                  Helper
-	chain                   handler.RealmHandler
+	realmChan               realmChanHandler.RealmHandler
 	successReconcileTimeout time.Duration
 }
 
@@ -59,7 +63,7 @@ func (r *ReconcileKeycloakRealm) SetupWithManager(mgr ctrl.Manager, successRecon
 	}
 
 	err := ctrl.NewControllerManagedBy(mgr).
-		For(&keycloakApi.KeycloakRealm{}, builder.WithPredicates(pred)).
+		For(&keycloakApiAlpha.KeycloakRealm{}, builder.WithPredicates(pred)).
 		Complete(r)
 	if err != nil {
 		return fmt.Errorf("failed to setup KeycloakRealm controller: %w", err)
@@ -68,9 +72,9 @@ func (r *ReconcileKeycloakRealm) SetupWithManager(mgr ctrl.Manager, successRecon
 	return nil
 }
 
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakrealms,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakrealms/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakrealms/finalizers,verbs=update
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakrealms,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakrealms/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakrealms/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",namespace=keycloak,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is a loop for reconciling KeycloakRealm object.
@@ -78,7 +82,7 @@ func (r *ReconcileKeycloakRealm) Reconcile(ctx context.Context, request reconcil
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Reconciling KeycloakRealm")
 
-	instance := &keycloakApi.KeycloakRealm{}
+	instance := &keycloakApiAlpha.KeycloakRealm{}
 	if err := r.client.Get(ctx, request.NamespacedName, instance); err != nil {
 		if k8sErrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -118,20 +122,21 @@ func (r *ReconcileKeycloakRealm) Reconcile(ctx context.Context, request reconcil
 	return result, resultErr
 }
 
-func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keycloakApi.KeycloakRealm) error {
-	if err := r.helper.SetKeycloakOwnerRef(ctx, realm); err != nil {
-		return fmt.Errorf("failed to set keycloak owner reference: %w", err)
-	}
-
-	kClientV2, err := r.helper.CreateKeycloakClientV2FromRealm(ctx, realm)
+func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keycloakApiAlpha.KeycloakRealm) error {
+	kClientV2, err := r.helper.CreateKeycloakClientV2FromConfigRef(ctx, realm)
 	if err != nil {
 		return fmt.Errorf("failed to create keycloak v2 client for realm: %w", err)
+	}
+
+	kClient, err := r.helper.CreateKeycloakClientFromConfigRef(ctx, realm)
+	if err != nil {
+		return fmt.Errorf("unable to create keycloak client from realm ref: %w", err)
 	}
 
 	deleted, err := r.helper.TryToDelete(
 		ctx,
 		realm,
-		makeTerminator(realm.Spec.RealmName, kClientV2.Realms, objectmeta.PreserveResourcesOnDeletion(realm)),
+		makeTerminator(realm.Spec, kClientV2, objectmeta.PreserveResourcesOnDeletion(realm)),
 		keyCloakRealmOperatorFinalizerName,
 	)
 	if err != nil {
@@ -142,8 +147,21 @@ func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keyclo
 		return nil
 	}
 
-	if err := r.chain.ServeRequest(ctx, realm, kClientV2); err != nil {
+	if err = r.realmChan.ServeRequest(ctx, realm, kClientV2); err != nil {
 		return fmt.Errorf("error during realm chain: %w", err)
+	}
+
+	if err = roleChan.MakeChain(kClientV2).Serve(ctx, realm); err != nil {
+		return fmt.Errorf("error during realm role chain: %w", err)
+	}
+
+	if err = groupChan.MakeChain().Serve(ctx, realm, kClientV2); err != nil {
+		return fmt.Errorf("error during realm group chain: %w", err)
+	}
+
+	// TODO: need fix, use only kClientV2 and remove kClient
+	if err = idpChan.MakeChain(kClient, r.client).Serve(ctx, realm); err != nil {
+		return fmt.Errorf("unable to serve keycloak realm idp: %w", err)
 	}
 
 	return nil

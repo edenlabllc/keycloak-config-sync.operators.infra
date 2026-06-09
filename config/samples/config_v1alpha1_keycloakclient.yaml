@@ -1,0 +1,439 @@
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: ksa-ehealth-client
+  namespace: keycloak
+  annotations:
+    # skip resource delete
+    "idp.edenlab.io/preserve-resources-no-delete": "true"
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Name specifies the name of the Keycloak resource.
+    name: ksa-ehealth
+
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # In Keycloak, a Client Scope is a reusable set of protocol mappers and
+  # role scope mappings that can be attached to one or more clients.
+  clientScope:
+      # Name of keycloak client scope.
+    - name: "test-scope"
+
+      # Description is a description of client scope.
+      description: "Test scope"
+
+      # Protocol is SSO protocol configuration which is being supplied by this client scope.
+      protocol: openid-connect
+
+      # Default is a flag to set client scope as default. Deprecated: Use Type: default instead.
+      default: false
+
+      # Type of the client scope. If set to "default", the client scope is assigned to all clients by default. If set to "optional", the client scope can be assigned to clients on demand. If set to "none", the client scope is not assigned to any clients by default.
+      #
+      # Enum: default, optional, none
+      # Default: none
+      type: "none"
+
+      # ProtocolMappers is a list of protocol mappers assigned to client scope.
+      #protocolMappers:
+      #    # Name is a protocol mapper name.
+      #  - name: ""
+      #    # Protocol is a protocol name.
+      #    protocol: ""
+      #    # ProtocolMapper is a protocol mapper name.
+      #    protocolMapper: ""
+      #    # Config is a map of protocol mapper configuration.
+      #    config:
+      #      key: "value"
+
+      # Name of keycloak client scope.
+    - name: "offline_access"
+
+      # Description is a description of client scope.
+      description: "OpenID Connect built-in scope: offline_access"
+
+      # Protocol is SSO protocol configuration which is being supplied by this client scope.
+      protocol: openid-connect
+
+      # Attributes is a map of client scope attributes.
+      attributes:
+        "consent.screen.text": ""
+        "display.on.consent.screen": "true"
+
+  client:
+      # ClientId is a unique keycloak client ID referenced in URI and tokens.
+    - clientId: ehealth-portal
+
+      # AdminFineGrainedPermissionsEnabled enable/disable fine-grained admin permissions for a client.
+      # Feature flag admin-fine-grained-authz:v1 should be enabled in Keycloak server.
+      # Important: FGAP:V1 Keycloak feature remains in preview and may be deprecated and removed in a future releases.
+      adminFineGrainedPermissionsEnabled: false
+
+      # AdvancedProtocolMappers is a flag to enable advanced protocol mappers.
+      advancedProtocolMappers: false
+
+      # Description is a client description.
+      description: "ehealth-portal"
+
+      # AdvancedSettings contains advanced client configuration.
+      #advancedSettings:
+      #  # AccessTokenLifespan is the access token lifespan in seconds for this client.
+      #  # Overrides the realm-level access token lifespan. If not set, the realm default is used.
+      #  #
+      #  # Minimum: 0
+      #  accessTokenLifespan: 0
+
+      # AuthenticationFlowBindingOverrides client auth flow overrides
+      #authenticationFlowBindingOverrides:
+      #  browser: ""
+      #  directGrant: ""
+
+      # Authorization is a client authorization configuration.
+#      authorization:
+#        permissions:
+#            # Name is a permission name.
+#          - name: ""
+#            # Type is a permission type.
+#            #
+#            # Enum: resource, scope
+#            type: "scope"
+#            # DecisionStrategy is a permission decision strategy.
+#            #
+#            # Enum: UNANIMOUS, AFFIRMATIVE, CONSENSUS
+#            # Default: UNANIMOUS
+#            decisionStrategy: "UNANIMOUS"
+#            # Description is a permission description.
+#            description: ""
+#            # Logic is a permission logic.
+#            #
+#            # Enum: POSITIVE, NEGATIVE
+#            # Default: POSITIVE
+#            logic: "POSITIVE"
+#            # Policies is a list of policies names. Specifies all the policies
+#            # that must be applied to the scopes defined by this policy or permission.
+#            policies: []
+#            # Resources is a list of resources names.
+#            # Specifies that this permission must be applied to all resource instances of a given type.
+#            resources: []
+#            # Scopes is a list of authorization scopes names.
+#            # Specifies that this permission must be applied to one or more scopes.
+#            scopes: []
+#        policies:
+#            # Name is a policy name.
+#          - name: ""
+#            # Type is a policy type.
+#            #
+#            # Enum: aggregate, client, group, role, time, user
+#            type: "client"
+#            # AggregatedPolicy is an aggregated policy settings.
+#            aggregatedPolicy:
+#              # Policies is a list of aggregated policies names. Specifies all the policies that must be applied to the scopes defined by this policy or permission.
+#              policies:
+#                - ""
+#            # ClientPolicy is a client policy settings.
+#            clientPolicy:
+#              # Clients is a list of client names. Specifies which client(s) are allowed by this policy.
+#              clients:
+#                - ""
+#            # DecisionStrategy is a policy decision strategy.
+#            #
+#            # Enum: UNANIMOUS, AFFIRMATIVE, CONSENSUS
+#            # Default: UNANIMOUS
+#            decisionStrategy: "UNANIMOUS"
+#            # Description is a policy description.
+#            description: ""
+#            # GroupPolicy is a group policy settings.
+#            groupPolicy:
+#              # GroupsClaim is a group claim. If defined, the policy will fetch user's groups
+#              # from the given claim within an access token or ID token representing the identity asking permissions.
+#              # If not defined, user's groups are obtained from your realm configuration.
+#              groupsClaim: ""
+#              # Groups is a list of group names. Specifies which group(s) are allowed by this policy.
+#              groups:
+#                  # Name is a group name.
+#                - name: ""
+#                  # ExtendChildren is a flag that specifies whether to extend children.
+#                  extendChildren: false
+#            # Logic is a policy logic.
+#            #
+#            # Enum: POSITIVE, NEGATIVE
+#            # Default: POSITIVE
+#            logic: "POSITIVE"
+#            # RolePolicy is a role policy settings.
+#            rolePolicy:
+#              # Roles is a list of role.
+#              roles:
+#                  # Name is a role name.
+#                - name: ""
+#                  # Required is a flag that specifies whether the role is required.
+#                  required: false
+#            timePolicy:
+#              # NotBefore defines the time before which the policy MUST NOT be granted.
+#              # Only granted if current date/time is after or equal to this value.
+#              notBefore: ""
+#              # NotOnOrAfter defines the time after which the policy MUST NOT be granted.
+#              # Only granted if current date/time is before or equal to this value.
+#              notOnOrAfter: ""
+#              # Day defines the month which the policy MUST be granted.
+#              # You can also provide a range by filling the dayMonthEnd field. In this case,
+#              # permission is granted only if current month is between or equal to the two values you provided.
+#              dayMonth: ""
+#              dayMonthEnd: ""
+#              # Hour defines the hour when the policy MUST be granted.
+#              # You can also provide a range by filling the hourEnd. In this case, permission is granted only
+#              # if current hour is between or equal to the two values you provided.
+#              hour: ""
+#              hourEnd: ""
+#              # Minute defines the minute when the policy MUST be granted.
+#              # You can also provide a range by filling the minuteEnd field. In this case,
+#              # permission is granted only if current minute is between or equal to the two values you provided.
+#              minute: ""
+#              minuteEnd: ""
+#              # Month defines the month which the policy MUST be granted.
+#              # You can also provide a range by filling the monthEnd. In this case, permission is granted only
+#              # if current month is between or equal to the two values you provided.
+#              month: ""
+#              monthEnd: ""
+#            # UserPolicy is a user policy settings.
+#            userPolicy:
+#              # Users is a list of usernames. Specifies which user(s) are allowed by this policy.
+#              users:
+#                - ""
+#        resources:
+#            # DisplayName for Identity Providers.
+#          - displayName: ""
+#            # Name is unique resource name.
+#            name: ""
+#            # Attributes is a map of resource attributes.
+#            attributes:
+#              key: "value"
+#            # IconURI pointing to an icon.
+#            iconUri: ""
+#            # OwnerManagedAccess if enabled, the access to this resource can be managed by the resource owner.
+#            ownerManagedAccess: false
+#            # Scopes requested or assigned in advance to the client to determine
+#            # whether the policy is applied to this client.
+#            # Condition is evaluated during OpenID Connect authorization request and/or token request.
+#            scopes:
+#              - ""
+#            # Type of this resource. It can be used to group different resource instances with the same type.
+#            type: ""
+#            # URIs which are protected by resource.
+#            uris:
+#              - ""
+#        scopes:
+#          - ""
+
+      # AuthorizationServicesEnabled enable/disable fine-grained authorization support for a client.
+      authorizationServicesEnabled: false
+
+      # ReconciliationStrategy is a strategy to reconcile client.
+      #
+      # Enum: full, addOnly
+      reconciliationStrategy: "addOnly"
+
+      # Name is a client name.
+      name: ehealth-portal
+
+      # Enabled is a flag to enable client.
+      #
+      # Default: true
+      enabled: true
+
+      # Protocol is a client protocol.
+      protocol: openid-connect
+
+      # Public is a flag to set client as public.
+      public: false
+
+      # BearerOnly is a flag to enable bearer-only.
+      bearerOnly: false
+
+      # StandardFlowEnabled is a flag to enable standard flow.
+      #
+      # Default: true
+      standardFlowEnabled: true
+
+      # ImplicitFlowEnabled is a flag to enable support for OpenID Connect
+      # redirect based authentication without authorization code.
+      implicitFlowEnabled: true
+
+      # DirectAccess is a flag to set client as direct access.
+      directAccess: true
+
+      # ServiceAccount is a service account configuration.
+      serviceAccount:
+        # Enabled is a flag to enable service account.
+        enabled: true
+        # Attributes is a map of service account attributes. Deprecated: Use AttributesV2 instead.
+        #attributes:
+        #  key: "value"
+        # AttributesV2 is a map of service account attributes. Each attribute can have multiple values.
+        #attributesV2:
+        #  key:
+        #    - "value"
+        # ClientRoles is a list of client roles assigned to service account.
+        #clientRoles:
+        #    # ClientID is a client ID.
+        #  - clientId: ""
+        #    # Roles is a list of client roles names assigned to user.
+        #    roles:
+        #      - ""
+        # Groups is a list of groups assigned to service account
+        #groups:
+        #  - ""
+        # RealmRoles is a list of realm roles assigned to service account.
+        #realmRoles:
+        #  - ""
+
+      # FrontChannelLogout is a flag to enable front channel logout.
+      frontChannelLogout: false
+
+      # ConsentRequired is a flag to enable consent.
+      consentRequired: false
+
+      # FullScopeAllowed is a flag to enable full scope.
+      #
+      # Default: true
+      fullScopeAllowed: true
+
+      # ClientAuthenticatorType is a client authenticator type.
+      #
+      # Default: client-secret
+      clientAuthenticatorType: client-secret
+
+      # DefaultClientScopes is a list of default client scopes assigned to client.
+      defaultClientScopes:
+        - "offline_access"
+        - "test-scope"
+
+      # OptionalClientScopes is a list of optional client scopes assigned to client.
+      optionalClientScopes:
+        - "offline_access"
+
+      # ProtocolMappers is a list of protocol mappers assigned to client.
+      protocolMappers:
+          # Name is a protocol mapper name.
+        - name: "Client Host"
+
+          # Protocol is a protocol name.
+          protocol: "openid-connect"
+
+          # ProtocolMapper is a protocol mapper name.
+          protocolMapper: "oidc-usersessionmodel-note-mapper"
+
+          # Config is a map of protocol mapper configuration.
+          config:
+            "user.session.note": "clientHost"
+            "userinfo.token.claim": "true"
+            "id.token.claim": "true"
+            "access.token.claim": "true"
+            "claim.name": "clientHost"
+            "jsonType.label": "String"
+
+      # Attributes is a map of client attributes.
+      #
+      # Default: map[post.logout.redirect.uris:+]
+      attributes:
+        "saml.force.post.binding": "false"
+        "saml.multivalued.roles": "false"
+        "post.logout.redirect.uris": "*"
+        "oauth2.device.authorization.grant.enabled": "true"
+        "backchannel.logout.revoke.offline.tokens": "false"
+        "saml.server.signature.keyinfo.ext": "false"
+        "use.refresh.tokens": "true"
+        "oidc.ciba.grant.enabled": "false"
+        "backchannel.logout.session.required": "true"
+        "client_credentials.use_refresh_token": "false"
+        "require.pushed.authorization.requests": "false"
+        "saml.client.signature": "false"
+        "id.token.as.detached.signature": "false"
+        "saml.assertion.signature": "false"
+        "client.secret.creation.time": "1741166449"
+        "saml.encrypt": "false"
+        "saml.server.signature": "false"
+        "exclude.session.state.from.auth.response": "false"
+        "saml.artifact.binding": "false"
+        "saml_force_name_id_format": "false"
+        "tls.client.certificate.bound.access.tokens": "false"
+        "saml.authnstatement": "false"
+        "display.on.consent.screen": "false"
+        "saml.onetimeuse.condition": "false"
+
+      # SurrogateAuthRequired is a flag to enable surrogate auth.
+      surrogateAuthRequired: false
+
+      # RedirectUris is a list of valid URI pattern a browser can redirect to after a successful login.
+      # Simple wildcards are allowed such as 'https://example.com/*'.
+      # Relative path can be specified too, such as /my/relative/path/*.
+      # Relative paths are relative to the client root URL.
+      # If not specified, spec.webUrl + "/*" will be used.
+      redirectUris:
+        - "*"
+
+      # WebUrl is a client web url.
+      webUrl: "https://ksa-ehealth-develop.edenlab.dev"
+
+      # AdminUrl is client admin url. If empty - WebUrl will be used.
+      adminUrl: ""
+
+      # HomeUrl is a client home url.
+      homeUrl: "https://ksa-ehealth-develop.edenlab.dev"
+
+      # ClientRoles is a list of client roles names assigned to client. Deprecated: Use ClientRolesV2 instead.
+      clientRoles:
+        - "wasfati-viewer"
+
+      # ClientRolesV2 is a list of client roles assigned to client.
+      clientRolesV2:
+          # Name is a client role name.
+        - name: "wasfati-viewer"
+
+          # AssociatedClientRoles is a list of client roles names associated with the current role.
+          # These roles won't be created automatically, user should specify them separately in clientRolesV2.
+          associatedClientRoles:
+            - "wasfati-viewer"
+
+          # Description is a client role description.
+          description: "wasfati-viewer"
+
+#      # Permission is a client permissions configuration
+#      permission:
+#        # ScopePermissions mapping of scope and the policies attached
+#        scopePermissions:
+#          - name: ""
+#            policies:
+#              - ""
+
+#      # RealmRoles is a list of realm roles assigned to client.
+#      realmRoles:
+#          # Composite is a realm composite role name.
+#        - composite: ""
+#          # Name is a realm role name.
+#          name: ""
+
+      # Secret is kubernetes secret name where the client's secret will be stored.
+      # Secret should have the following format: $secretName:secretKey.
+      # If not specified, a client secret will be generated and stored in a secret
+      # with the name keycloak-client-{metadata.name}-secret.
+      # If keycloak client is public, secret property will be ignored.
+      #secret: ""
+
+      # WebOrigins is a list of allowed CORS origins.
+      # To permit all origins of Valid Redirect URIs, add '+'.
+      # This does not include the '*' wildcard though.
+      # To permit all origins, explicitly add '*'. If not specified, the value from `WebUrl` is used
+      webOrigins:
+        - "*"

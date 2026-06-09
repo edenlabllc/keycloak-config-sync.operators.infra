@@ -11,8 +11,11 @@ import (
 	"time"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakauthflow"
-	webhookv1 "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/webhook/v1"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakcomponent"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakuser"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	webhookv1 "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/webhook/v1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -30,23 +33,11 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
-	keycloakApi1alpha1 "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/clusterkeycloak"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/clusterkeycloakrealm"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloak"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclientscope"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclientscopemapping"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakorganization"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmcomponent"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmgroup"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmidentityprovider"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmrole"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmrolebatch"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealmuser"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakscopemapping"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/secretref"
@@ -59,15 +50,15 @@ var (
 )
 
 const (
-	keycloakOperatorLock    = "edp-keycloak-operator-lock"
+	keycloakOperatorLock    = "idp-keycloak-operator-lock"
 	successReconcileTimeout = "SUCCESS_RECONCILE_TIMEOUT"
 	operatorNamespaceEnv    = "OPERATOR_NAMESPACE"
 )
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(keycloakApi.AddToScheme(scheme))
-	utilruntime.Must(keycloakApi1alpha1.AddToScheme(scheme))
+	utilruntime.Must(keycloakApiAlpha.AddToScheme(scheme))
+	utilruntime.Must(keycloakApiAlpha.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -253,12 +244,6 @@ func main() {
 
 	h := helper.MakeHelper(mgr.GetClient(), mgr.GetScheme(), operatorNamespace, helper.EnableOwnerRef(enableOwnerRef()))
 
-	keycloakCtrl := keycloak.NewReconcileKeycloak(mgr.GetClient(), mgr.GetScheme(), h)
-	if err = keycloakCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
-		setupLog.Error(err, "unable to create keycloak controller")
-		os.Exit(1)
-	}
-
 	keycloakClientCtrl := keycloakclient.NewReconcileKeycloakClient(mgr.GetClient(), h)
 	if err = keycloakClientCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
 		setupLog.Error(err, "unable to create keycloak-client controller")
@@ -271,45 +256,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	krgCtrl := keycloakrealmgroup.NewReconcileKeycloakRealmGroup(mgr.GetClient(), h)
-	if err = krgCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
-		setupLog.Error(err, "unable to create keycloak-realm-group controller")
-		os.Exit(1)
-	}
-
-	krrCtrl := keycloakrealmrole.NewReconcileKeycloakRealmRole(mgr.GetClient(), h)
-	if err = krrCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
-		setupLog.Error(err, "unable to create keycloak-realm-role controller")
-		os.Exit(1)
-	}
-
-	krrbCtrl := keycloakrealmrolebatch.NewReconcileKeycloakRealmRoleBatch(mgr.GetClient(), h)
-	if err = krrbCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
-		setupLog.Error(err, "unable to create keycloak-realm-role-batch controller")
-		os.Exit(1)
-	}
-
 	kafCtrl := keycloakauthflow.NewReconcile(mgr.GetClient(), h)
 	if err = kafCtrl.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create keycloak-auth-flow controller")
 		os.Exit(1)
 	}
 
-	kruCtrl := keycloakrealmuser.NewReconcile(mgr.GetClient(), h)
+	kruCtrl := keycloakuser.NewReconcile(mgr.GetClient(), h)
 	if err = kruCtrl.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create keycloak-realm-user controller")
-		os.Exit(1)
-	}
-
-	if err = keycloakclientscope.NewReconcile(mgr.GetClient(), h).
-		SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create keycloak-client-scope controller")
-		os.Exit(1)
-	}
-
-	if err = keycloakclientscopemapping.NewReconcile(mgr.GetClient(), h).
-		SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create keycloak-client-scope-mapping controller")
 		os.Exit(1)
 	}
 
@@ -319,7 +274,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = keycloakrealmcomponent.NewReconcile(
+	if err = keycloakcomponent.NewReconcile(
 		mgr.GetClient(),
 		mgr.GetScheme(),
 		h,
@@ -328,31 +283,6 @@ func main() {
 		SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
 		setupLog.Error(err, "unable to create keycloak-realm-component controller")
 		os.Exit(1)
-	}
-
-	if err = keycloakrealmidentityprovider.NewReconcile(mgr.GetClient(), h).
-		SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
-		setupLog.Error(err, "unable to create keycloak-realm-identity-provider controller")
-		os.Exit(1)
-	}
-
-	if ns == "" {
-		if err = clusterkeycloak.NewReconcile(mgr.GetClient(), mgr.GetScheme(), h).
-			SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create clusterkeycloak controller")
-			os.Exit(1)
-		}
-
-		if err = clusterkeycloakrealm.NewClusterKeycloakRealmReconciler(
-			mgr.GetClient(),
-			mgr.GetScheme(),
-			h,
-			operatorNamespace,
-		).
-			SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "ClusterKeycloakRealm")
-			os.Exit(1)
-		}
 	}
 
 	organizationCtrl := keycloakorganization.NewReconcileOrganization(mgr.GetClient(), h)

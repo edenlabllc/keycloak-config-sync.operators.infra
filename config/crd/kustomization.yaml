@@ -2,22 +2,13 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/v1.edp.edenlab.io_keycloaks.yaml
-- bases/v1.edp.edenlab.io_keycloakauthflows.yaml
-- bases/v1.edp.edenlab.io_keycloakclients.yaml
-- bases/v1.edp.edenlab.io_keycloakclientscopes.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmcomponents.yaml
-- bases/v1.edp.edenlab.io_keycloakrealms.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmgroups.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmidentityproviders.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmroles.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmrolebatches.yaml
-- bases/v1.edp.edenlab.io_keycloakrealmusers.yaml
-- bases/v1.edp.edenlab.io_clusterkeycloaks.yaml
-- bases/v1.edp.edenlab.io_clusterkeycloakrealms.yaml
-- bases/v1.edp.edenlab.io_keycloakorganizations.yaml
-- bases/v1.edp.edenlab.io_keycloakclientscopemappings.yaml
-- bases/v1.edp.edenlab.io_keycloakscopemappings.yaml
+- bases/config.idp.edenlab.io_keycloakauthflows.yaml
+- bases/config.idp.edenlab.io_keycloakclients.yaml
+- bases/config.idp.edenlab.io_keycloakcomponents.yaml
+- bases/config.idp.edenlab.io_keycloakrealms.yaml
+- bases/config.idp.edenlab.io_keycloakusers.yaml
+- bases/config.idp.edenlab.io_keycloakorganizations.yaml
+- bases/config.idp.edenlab.io_keycloakscopemappings.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patches:

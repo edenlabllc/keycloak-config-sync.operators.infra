@@ -7,7 +7,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
 
@@ -22,7 +22,7 @@ func NewSyncAuthFlowExecutions(kClient *keycloakv2.KeycloakClient) *SyncAuthFlow
 	return &SyncAuthFlowExecutions{kClient: kClient}
 }
 
-func (h *SyncAuthFlowExecutions) Serve(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *SyncAuthFlowExecutions) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Syncing auth flow executions", "alias", flow.Spec.Alias)
 
@@ -32,7 +32,7 @@ func (h *SyncAuthFlowExecutions) Serve(ctx context.Context, flow *keycloakApi.Ke
 
 	// Collect only non-flow executions from spec (flow-type executions are managed
 	// by separate child KeycloakAuthFlow resources).
-	var execsToAdd []keycloakApi.AuthenticationExecution
+	var execsToAdd []keycloakApiAlpha.AuthenticationExecution
 
 	for _, e := range flow.Spec.AuthenticationExecutions {
 		if !e.AuthenticatorFlow {
@@ -131,7 +131,7 @@ func (h *SyncAuthFlowExecutions) addExecution(ctx context.Context, realmName, fl
 func (h *SyncAuthFlowExecutions) createExecutionConfig(
 	ctx context.Context,
 	realmName, execID string,
-	cfg *keycloakApi.AuthenticatorConfig,
+	cfg *keycloakApiAlpha.AuthenticatorConfig,
 ) error {
 	_, err := h.kClient.AuthFlows.CreateExecutionConfig(ctx, realmName, execID, keycloakv2.AuthenticatorConfigRepresentation{
 		Alias:  &cfg.Alias,
@@ -146,9 +146,9 @@ func (h *SyncAuthFlowExecutions) createExecutionConfig(
 
 // adjustChildFlowsPriority updates priority (and requirement) of flow-type executions
 // to match the spec. Ports adjustChildFlowsPriority from the legacy adapter.
-func (h *SyncAuthFlowExecutions) adjustChildFlowsPriority(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *SyncAuthFlowExecutions) adjustChildFlowsPriority(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	// Build a map of alias -> spec execution for flow-type entries.
-	childFlowSpecs := make(map[string]keycloakApi.AuthenticationExecution)
+	childFlowSpecs := make(map[string]keycloakApiAlpha.AuthenticationExecution)
 
 	for _, e := range flow.Spec.AuthenticationExecutions {
 		if e.AuthenticatorFlow {

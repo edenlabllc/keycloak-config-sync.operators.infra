@@ -16,8 +16,7 @@ import (
 func NewMockOrganizationsClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockOrganizationsClient {
+}) *MockOrganizationsClient {
 	mock := &MockOrganizationsClient{}
 	mock.Mock.Test(t)
 

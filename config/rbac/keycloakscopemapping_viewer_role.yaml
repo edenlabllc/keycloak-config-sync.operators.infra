@@ -8,7 +8,7 @@ metadata:
   name: keycloakscopemapping-viewer-role
 rules:
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakscopemappings
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakscopemappings/status
   verbs:

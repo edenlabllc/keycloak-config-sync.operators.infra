@@ -1,0 +1,82 @@
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakAuthFlow
+metadata:
+  name: keycloakauthflow-sample
+  namespace: keycloak
+  annotations:
+    # skip resource delete
+    "idp.edenlab.io/preserve-resources-no-delete": "true"
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Name specifies the name of the Keycloak resource.
+    name: keycloakrealm-sample
+
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Alias is display name for authentication flow.
+  alias: MyBrowser
+
+  # Description is description for authentication flow.
+  description: browser with idp
+
+  # ProviderID for root auth flow and provider for child auth flows.
+  providerId: basic-flow
+
+  # TopLevel is true if this is root auth flow.
+  topLevel: true
+
+  # BuiltIn is true if this is built-in auth flow.
+  builtIn: false
+
+  # ChildRequirement is requirement for child execution. Available options: REQUIRED, ALTERNATIVE, DISABLED, CONDITIONAL.
+  #childRequirement: ""
+
+  # AuthenticationExecutions is list of authentication executions for this auth flow.
+  authenticationExecutions:
+      # Authenticator is name of authenticator.
+    - authenticator: "auth-cookie"
+
+      # Priority is priority for this execution. Lower values have higher priority.
+      priority: 0
+
+      # Requirement is requirement for this execution. Available options: REQUIRED, ALTERNATIVE, DISABLED, CONDITIONAL.
+      requirement: "ALTERNATIVE"
+
+      # Alias is display name for this execution.
+      #alias: ""
+
+      # AuthenticatorFlow is true if this is auth flow.
+      authenticatorFlow: false
+
+      # Authenticator is name of authenticator.
+    - authenticator: "identity-provider-redirector"
+
+      # Priority is priority for this execution. Lower values have higher priority.
+      priority: 1
+
+      # Requirement is requirement for this execution. Available options: REQUIRED, ALTERNATIVE, DISABLED, CONDITIONAL.
+      requirement: "REQUIRED"
+
+      # AuthenticatorConfig is configuration for authenticator.
+      authenticatorConfig:
+        # Alias is display name for authenticator config.
+        alias: my-alias
+
+        # Config is configuration for authenticator.
+        config:
+          "defaultProvider": "my-alias"
+
+      # AuthenticatorFlow is true if this is auth flow.
+      authenticatorFlow: false

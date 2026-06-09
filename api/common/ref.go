@@ -4,6 +4,17 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// ConfigRef is a reference to a Keycloak auth.
+type ConfigRef struct {
+	// URL of keycloak service.
+	// +required
+	Url string `json:"url"`
+
+	// Secret is a secret name which contains admin credentials.
+	// +required
+	Secret string `json:"secret"`
+}
+
 // RealmRef is a reference to a Keycloak realm.
 // This is new approach to reference Keycloak resources.
 // After migration to this approach, we can make Name and Kind required values.
@@ -25,10 +36,17 @@ type HasRealmRef interface {
 }
 
 // +kubebuilder:object:generate=false
+type HasConfigRef interface {
+	GetConfigRef() ConfigRef
+}
+
+// TODO: deprecatred
+// +kubebuilder:object:generate=false
 type HasKeycloakRef interface {
 	GetKeycloakRef() KeycloakRef
 }
 
+// TODO: deprecatred
 // KeycloakRef is a reference to a Keycloak instance.
 // This is new approach to reference Keycloak resources.
 // After migration to this approach, we can make Name and Kind required values.

@@ -1,5 +1,6 @@
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+MOCKERY_VERSION ?= v3.6.3
 # YEAR defines the year value used for substituting the YEAR placeholder in the boilerplate header.
 YEAR ?= $(shell date +%Y)
 
@@ -308,3 +309,11 @@ helm-history: ## Show Helm release history.
 .PHONY: helm-rollback
 helm-rollback: ## Rollback to previous Helm release.
 	$(HELM) rollback $(HELM_RELEASE) --namespace $(HELM_NAMESPACE)
+
+mocks: mockery
+	$(MOCKERY)
+
+MOCKERY = $(LOCALBIN)/mockery
+.PHONY: mockery
+mockery: ## Download mockery locally if necessary.
+	$(call go-install-tool,$(MOCKERY),github.com/vektra/mockery/v3,$(MOCKERY_VERSION))

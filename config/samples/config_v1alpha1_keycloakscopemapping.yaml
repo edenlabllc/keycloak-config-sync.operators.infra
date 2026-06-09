@@ -1,0 +1,122 @@
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakScopeMapping
+metadata:
+  name: ksa-ehealth-offline-access-scope-mapping
+  namespace: keycloak
+  annotations:
+    # skip resource delete
+    "idp.edenlab.io/preserve-resources-no-delete": "true"
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Name specifies the name of the Keycloak resource.
+    name: ksa-ehealth
+
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Name of the client scope being mapped.
+  # The scope contains role scope mappings and/or protocol mappers.
+  clientScope: "offline_access"
+
+  # Human-readable description of the scope mapping.
+  description: "scope mapping offline_access with relm role offline_access"
+
+  # Roles granted through this client scope mapping.
+  # These roles become available to the target client when the scope is assigned.
+  roles:
+    - name: "offline_access"
+
+---
+
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakScopeMapping
+metadata:
+  name: ksa-ehealth-ehealth-portal-dispense-request-manage-cl-scope-mapping
+  namespace: keycloak
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Name specifies the name of the Keycloak resource.
+    name: ksa-ehealth
+
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Client that receives access to the specified client scope.
+  # Roles from the client scope become available to this client.
+  fromClient: "ehealth-portal"
+
+  # Name of the client scope being mapped.
+  # The scope contains role scope mappings and/or protocol mappers.
+  clientScope: "dispense_request_manage"
+
+  # Human-readable description of the scope mapping.
+  description: "client scope mapping from client ehealth-portal to scope dispense_request_manage"
+
+  # Roles granted through this client scope mapping.
+  # These roles become available to the target client when the scope is assigned.
+  roles:
+    - name: "dispense_request_manager"
+    - name: "dispense_overridder"
+
+---
+
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakScopeMapping
+metadata:
+  name: ksa-ehealth-ehealth-portal-account-cl-scope-mapping
+  namespace: keycloak
+spec:
+  # RealmRef is reference to Realm custom resource.
+  realmRef:
+    # Name specifies the name of the Keycloak resource.
+    name: ksa-ehealth
+
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: KeycloakRealm
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: keycloak-ksa-ehealth-access
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Client that receives access to the specified client scope.
+  # Roles from the client scope become available to this client.
+  fromClient: "account"
+
+  # Client that owns the client scope.
+  client: "account-console"
+
+  # Human-readable description of the scope mapping.
+  description: "client scope mapping from client account to client account-console"
+
+  # Roles granted through this client scope mapping.
+  # These roles become available to the target client when the scope is assigned.
+  roles:
+    - name: "manage-account"

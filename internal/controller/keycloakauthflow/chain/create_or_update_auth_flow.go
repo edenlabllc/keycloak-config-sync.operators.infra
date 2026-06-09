@@ -8,7 +8,7 @@ import (
 	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
 
@@ -22,7 +22,7 @@ func NewCreateOrUpdateAuthFlow(kClient *keycloakv2.KeycloakClient) *CreateOrUpda
 	return &CreateOrUpdateAuthFlow{kClient: kClient}
 }
 
-func (h *CreateOrUpdateAuthFlow) Serve(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *CreateOrUpdateAuthFlow) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Creating or updating auth flow")
 
@@ -35,7 +35,7 @@ func (h *CreateOrUpdateAuthFlow) Serve(ctx context.Context, flow *keycloakApi.Ke
 	return h.serveTopLevelFlow(ctx, flow, realmName)
 }
 
-func (h *CreateOrUpdateAuthFlow) serveTopLevelFlow(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *CreateOrUpdateAuthFlow) serveTopLevelFlow(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	flows, _, err := h.kClient.AuthFlows.GetAuthFlows(ctx, realmName)
@@ -78,7 +78,7 @@ func (h *CreateOrUpdateAuthFlow) serveTopLevelFlow(ctx context.Context, flow *ke
 	return h.validateChildFlows(ctx, flow, realmName)
 }
 
-func (h *CreateOrUpdateAuthFlow) serveChildFlow(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *CreateOrUpdateAuthFlow) serveChildFlow(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	execs, _, err := h.kClient.AuthFlows.GetFlowExecutions(ctx, realmName, flow.Spec.ParentName)
@@ -138,7 +138,7 @@ func (h *CreateOrUpdateAuthFlow) serveChildFlow(ctx context.Context, flow *keycl
 
 // validateChildFlows checks that all flow-type executions specified in the spec have been
 // created in Keycloak. Returns an error if any are missing (causing a requeue).
-func (h *CreateOrUpdateAuthFlow) validateChildFlows(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *CreateOrUpdateAuthFlow) validateChildFlows(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	expectedChildFlows := 0
 
 	for _, e := range flow.Spec.AuthenticationExecutions {
@@ -172,7 +172,7 @@ func (h *CreateOrUpdateAuthFlow) validateChildFlows(ctx context.Context, flow *k
 	return nil
 }
 
-func authFlowRepFromSpec(spec keycloakApi.KeycloakAuthFlowSpec) keycloakv2.AuthFlowRepresentation {
+func authFlowRepFromSpec(spec keycloakApiAlpha.KeycloakAuthFlowSpec) keycloakv2.AuthFlowRepresentation {
 	builtIn := spec.BuiltIn
 	topLevel := spec.TopLevel
 

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/Nerzal/gocloak/v12"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/dto"
 )
@@ -61,7 +61,7 @@ type KCloakGroups interface {
 	SyncRealmGroup(
 		ctx context.Context,
 		realm string,
-		spec *keycloakApi.KeycloakRealmGroupSpec,
+		group *keycloakApiAlpha.Group,
 		parentGroupID string,
 	) (string, error)
 	DeleteGroup(ctx context.Context, realm, groupName string) error

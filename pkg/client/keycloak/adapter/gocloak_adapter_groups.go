@@ -7,9 +7,8 @@ import (
 	"sync"
 
 	"github.com/Nerzal/gocloak/v12"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"golang.org/x/sync/errgroup"
-
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
 )
 
 type NotFoundError string
@@ -182,7 +181,7 @@ func (a GoCloakAdapter) getChildGroupsKCVersionUnder23(
 	return *result.SubGroups, nil
 }
 
-func (a GoCloakAdapter) syncGroupRoles(realmName, groupID string, spec *keycloakApi.KeycloakRealmGroupSpec) error {
+func (a GoCloakAdapter) syncGroupRoles(realmName, groupID string, spec *keycloakApiAlpha.Group) error {
 	roleMap, err := a.client.GetRoleMappingByGroupID(context.Background(), a.token.AccessToken, realmName, groupID)
 	if err != nil {
 		return fmt.Errorf("unable to get role mappings for group spec %+v: %w", spec, err)
@@ -253,16 +252,21 @@ func (a GoCloakAdapter) syncSubGroups(
 func (a GoCloakAdapter) SyncRealmGroup(
 	ctx context.Context,
 	realmName string,
-	spec *keycloakApi.KeycloakRealmGroupSpec,
+	groupItem *keycloakApiAlpha.Group,
 	parentGroupID string,
 ) (string, error) {
-	group, err := a.getGroup(ctx, realmName, spec.Name)
+	group, err := a.getGroup(ctx, realmName, groupItem.Name)
 	if err != nil {
 		if !IsErrNotFound(err) {
-			return "", fmt.Errorf("unable to get group with spec %+v: %w", spec, err)
+			return "", fmt.Errorf("unable to get group with spec %+v: %w", groupItem, err)
 		}
 
-		group = &gocloak.Group{Name: &spec.Name, Path: &spec.Path, Attributes: &spec.Attributes, Access: &spec.Access}
+		group = &gocloak.Group{
+			Name:       &groupItem.Name,
+			Path:       &groupItem.Path,
+			Attributes: &groupItem.Attributes,
+			Access:     &groupItem.Access,
+		}
 
 		var groupID string
 
@@ -270,30 +274,31 @@ func (a GoCloakAdapter) SyncRealmGroup(
 		if parentGroupID != "" {
 			groupID, err = a.client.CreateChildGroup(ctx, a.token.AccessToken, realmName, parentGroupID, *group)
 			if err != nil {
-				return "", fmt.Errorf("unable to create child group with spec %+v under parent ID %s: %w", spec, parentGroupID, err)
+				return "", fmt.Errorf("unable to create child group with spec %+v under parent ID %s: %w",
+					groupItem, parentGroupID, err)
 			}
 		} else {
 			groupID, err = a.client.CreateGroup(ctx, a.token.AccessToken, realmName, *group)
 			if err != nil {
-				return "", fmt.Errorf("unable to create group with spec %+v: %w", spec, err)
+				return "", fmt.Errorf("unable to create group with spec %+v: %w", groupItem, err)
 			}
 		}
 
 		group.ID = &groupID
 	} else {
-		group.Path, group.Access, group.Attributes = &spec.Path, &spec.Access, &spec.Attributes
+		group.Path, group.Access, group.Attributes = &groupItem.Path, &groupItem.Access, &groupItem.Attributes
 		if err := a.client.UpdateGroup(ctx, a.token.AccessToken, realmName, *group); err != nil {
-			return "", fmt.Errorf("unable to update group, realm: %s, group spec: %+v: %w", realmName, spec, err)
+			return "", fmt.Errorf("unable to update group, realm: %s, group spec: %+v: %w", realmName, groupItem, err)
 		}
 	}
 
-	if err := a.syncGroupRoles(realmName, *group.ID, spec); err != nil {
-		return "", fmt.Errorf("unable to sync group realm roles, group: %+v with spec %+v: %w", group, spec, err)
+	if err := a.syncGroupRoles(realmName, *group.ID, groupItem); err != nil {
+		return "", fmt.Errorf("unable to sync group realm roles, group: %+v with spec %+v: %w", group, groupItem, err)
 	}
 
-	if len(spec.SubGroups) > 0 {
-		if err := a.syncSubGroups(ctx, realmName, group, spec.SubGroups); err != nil {
-			return "", fmt.Errorf("unable to sync subgroups, group: %+v with spec: %+v: %w", group, spec, err)
+	if len(groupItem.SubGroups) > 0 {
+		if err := a.syncSubGroups(ctx, realmName, group, groupItem.SubGroups); err != nil {
+			return "", fmt.Errorf("unable to sync subgroups, group: %+v with spec: %+v: %w", group, groupItem, err)
 		}
 	}
 

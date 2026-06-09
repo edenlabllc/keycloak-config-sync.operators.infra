@@ -7,7 +7,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 )
@@ -23,7 +23,7 @@ func NewRemoveAuthFlow(kClient *keycloakv2.KeycloakClient, k8sClient client.Clie
 	return &RemoveAuthFlow{kClient: kClient, k8sClient: k8sClient}
 }
 
-func (h *RemoveAuthFlow) Serve(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *RemoveAuthFlow) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx).WithValues("realm", realmName, "alias", flow.Spec.Alias)
 
 	if objectmeta.PreserveResourcesOnDeletion(flow) {
@@ -44,8 +44,8 @@ func (h *RemoveAuthFlow) Serve(ctx context.Context, flow *keycloakApi.KeycloakAu
 }
 
 // checkNoChildFlows blocks deletion if any K8s KeycloakAuthFlow references this flow as parent.
-func (h *RemoveAuthFlow) checkNoChildFlows(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow) error {
-	var list keycloakApi.KeycloakAuthFlowList
+func (h *RemoveAuthFlow) checkNoChildFlows(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow) error {
+	var list keycloakApiAlpha.KeycloakAuthFlowList
 	if err := h.k8sClient.List(ctx, &list); err != nil {
 		return fmt.Errorf("failed to list KeycloakAuthFlow resources: %w", err)
 	}
@@ -64,7 +64,7 @@ func (h *RemoveAuthFlow) checkNoChildFlows(ctx context.Context, flow *keycloakAp
 }
 
 // deleteChildFlow finds the execution representing the child flow in its parent and deletes it.
-func (h *RemoveAuthFlow) deleteChildFlow(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *RemoveAuthFlow) deleteChildFlow(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	execs, _, err := h.kClient.AuthFlows.GetFlowExecutions(ctx, realmName, flow.Spec.ParentName)
@@ -108,7 +108,7 @@ func (h *RemoveAuthFlow) deleteChildFlow(ctx context.Context, flow *keycloakApi.
 }
 
 // deleteTopLevelFlow unsets the realm browser flow if needed, then deletes the flow.
-func (h *RemoveAuthFlow) deleteTopLevelFlow(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (h *RemoveAuthFlow) deleteTopLevelFlow(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	flowID := flow.Status.ID

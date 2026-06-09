@@ -2,7 +2,7 @@
 
 // Package v1alpha1 contains API Schema definitions for the v1 v1alpha1 API group
 // +kubebuilder:object:generate=true
-// +groupName=v1.edp.edenlab.io
+// +groupName=config.idp.edenlab.io
 package v1alpha1
 
 import (
@@ -12,7 +12,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects.
-	GroupVersion = schema.GroupVersion{Group: "v1.edp.edenlab.io", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "config.idp.edenlab.io", Version: "v1alpha1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme.
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
@@ -21,6 +21,13 @@ var (
 )
 
 const (
+	// TODO: old need remove
 	ClusterKeycloakKind      = "ClusterKeycloak"
 	ClusterKeycloakRealmKind = "ClusterKeycloakRealm"
+
+	// KeycloakRealmKind is a string value of the kind of KeycloakClient CR.
+	KeycloakRealmKind = "KeycloakRealm"
+	// KeycloakRealmComponentKind is a string value of the kind of KeycloakClient CR.
+	KeycloakRealmComponentKind = "KeycloakRealmComponent"
+	KeycloakKind               = "Keycloak"
 )

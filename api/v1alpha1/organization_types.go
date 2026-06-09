@@ -51,6 +51,10 @@ type KeycloakOrganizationSpec struct {
 	// RealmRef is reference to Realm custom resource.
 	// +required
 	RealmRef common.RealmRef `json:"realmRef"`
+
+	// ConfigRef is reference to Keycloak Config.
+	// +required
+	ConfigRef common.ConfigRef `json:"configRef"`
 }
 
 // OrgIdentityProvider defines an identity provider for an organization.
@@ -104,6 +108,10 @@ type KeycloakOrganization struct {
 
 func (in *KeycloakOrganization) GetRealmRef() common.RealmRef {
 	return in.Spec.RealmRef
+}
+
+func (in *KeycloakOrganization) GetConfigRef() common.ConfigRef {
+	return in.Spec.ConfigRef
 }
 
 // +kubebuilder:object:root=true
