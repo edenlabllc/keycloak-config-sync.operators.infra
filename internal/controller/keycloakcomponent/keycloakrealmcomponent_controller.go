@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v12"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -150,7 +151,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	}
 
 	if err := r.tryReconcile(ctx, keycloakRealmComponent, gocloak.PString(realm.Realm), kClient); err != nil {
-		keycloakRealmComponent.Status.Value = err.Error()
+		keycloakRealmComponent.Status.Error = err.Error()
+		keycloakRealmComponent.Status.Phase = common.PhaseFailed
 		requeueAfter := r.helper.SetFailureCount(keycloakRealmComponent)
 
 		if statusErr := r.client.Status().Update(ctx, keycloakRealmComponent); statusErr != nil {

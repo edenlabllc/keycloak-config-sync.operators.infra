@@ -14,8 +14,8 @@ type FailureCountable interface {
 }
 
 type StatusValue interface {
-	GetStatus() string
-	SetStatus(val string)
+	GetPhase() string
+	SetPhase(val string)
 }
 
 type StatusValueFailureCountable interface {
@@ -54,6 +54,6 @@ func IsFailuresUpdated(e event.UpdateEvent) bool {
 }
 
 func SetSuccessStatus(el StatusValueFailureCountable) {
-	el.SetStatus(common.StatusOK)
+	el.SetPhase(common.PhaseCompleted)
 	el.SetFailureCount(0)
 }

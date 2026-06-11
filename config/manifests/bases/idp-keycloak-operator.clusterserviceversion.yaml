@@ -32,11 +32,6 @@ spec:
       kind: KeycloakScopeMapping
       name: keycloakscopemapping.config.idp.edenlab.io
       version: v1alpha1
-    - description: KeycloakOrganization is the Schema for the organizations API.
-      displayName: Keycloak Organization
-      kind: KeycloakOrganization
-      name: keycloakorganizations.config.idp.edenlab.io
-      version: v1alpha1
     - description: KeycloakComponent is the Schema for the keycloak component
         API.
       displayName: Keycloak Component

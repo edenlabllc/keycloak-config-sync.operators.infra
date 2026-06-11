@@ -15,9 +15,17 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Reconciliation status
-      jsonPath: .status.value
-      name: Status
+    - description: Keycloak ref to realm name
+      jsonPath: .spec.realmRef.name
+      name: Realm
+      type: string
+    - description: Reconciliation phase
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    - description: Resource error
+      jsonPath: .status.error
+      name: Error
       type: string
     name: v1alpha1
     schema:
@@ -137,10 +145,12 @@ spec:
           status:
             description: KeycloakComponentStatus defines the observed state of KeycloakComponent.
             properties:
+              error:
+                type: string
               failureCount:
                 format: int64
                 type: integer
-              value:
+              phase:
                 type: string
             type: object
         type: object

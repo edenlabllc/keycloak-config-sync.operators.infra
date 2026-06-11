@@ -49,16 +49,21 @@ type KeycloakScopeMappingStatus struct {
 	ID string `json:"id,omitempty"`
 
 	// +optional
-	Value string `json:"value,omitempty"`
+	FailureCount int64 `json:"failureCount,omitempty"`
 
 	// +optional
-	FailureCount int64 `json:"failureCount,omitempty"`
+	Error string `json:"error,omitempty"`
+
+	// +optional
+	Phase string `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.value",description="Reconciliation status"
+// +kubebuilder:printcolumn:name="Realm",type="string",JSONPath=".spec.realmRef.name",description="Keycloak ref to realm name"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Reconciliation phase"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.error",description="Resource error"
 
 // KeycloakScopeMapping is the Schema for the keycloakscopemapping API.
 type KeycloakScopeMapping struct {
@@ -77,12 +82,12 @@ func (in *KeycloakScopeMapping) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in *KeycloakScopeMapping) GetStatus() string {
-	return in.Status.Value
+func (in *KeycloakScopeMapping) GetPhase() string {
+	return in.Status.Phase
 }
 
-func (in *KeycloakScopeMapping) SetStatus(value string) {
-	in.Status.Value = value
+func (in *KeycloakScopeMapping) SetPhase(value string) {
+	in.Status.Phase = value
 }
 
 func (in *KeycloakScopeMapping) GetRealmRef() common.RealmRef {

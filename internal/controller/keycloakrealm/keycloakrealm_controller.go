@@ -104,13 +104,14 @@ func (r *ReconcileKeycloakRealm) Reconcile(ctx context.Context, request reconcil
 		}
 
 		instance.Status.Available = false
-		instance.Status.Value = err.Error()
+		instance.Status.Error = err.Error()
+		instance.Status.Phase = common.PhaseFailed
 		result.RequeueAfter = r.helper.SetFailureCount(instance)
 
 		log.Error(err, "an error has occurred while handling keycloak realm", "name", request.Name)
 	} else {
 		instance.Status.Available = true
-		instance.Status.Value = common.StatusOK
+		instance.Status.Phase = common.PhaseCompleted
 		instance.Status.FailureCount = 0
 		result.RequeueAfter = r.successReconcileTimeout
 	}
@@ -151,11 +152,11 @@ func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keyclo
 		return fmt.Errorf("error during realm chain: %w", err)
 	}
 
-	if err = roleChan.MakeChain(kClientV2).Serve(ctx, realm); err != nil {
+	if err = roleChan.MakeChain(kClientV2, r.client).Serve(ctx, realm); err != nil {
 		return fmt.Errorf("error during realm role chain: %w", err)
 	}
 
-	if err = groupChan.MakeChain().Serve(ctx, realm, kClientV2); err != nil {
+	if err = groupChan.MakeChain().Serve(ctx, realm, kClientV2, r.client); err != nil {
 		return fmt.Errorf("error during realm group chain: %w", err)
 	}
 

@@ -7,7 +7,6 @@ resources:
 - bases/config.idp.edenlab.io_keycloakcomponents.yaml
 - bases/config.idp.edenlab.io_keycloakrealms.yaml
 - bases/config.idp.edenlab.io_keycloakusers.yaml
-- bases/config.idp.edenlab.io_keycloakorganizations.yaml
 - bases/config.idp.edenlab.io_keycloakscopemappings.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 

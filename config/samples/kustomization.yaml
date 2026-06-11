@@ -6,5 +6,4 @@ resources:
 - config_v1alpha1_keycloakcomponent.yaml
 - config_v1alpha1_keycloakrealm.yaml
 - config_v1alpha1_keycloakuser.yaml
-- config_v1alpha1_keycloakorganization.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

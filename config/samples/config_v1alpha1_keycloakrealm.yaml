@@ -1,135 +1,135 @@
 apiVersion: config.idp.edenlab.io/v1alpha1
 kind: KeycloakRealm
 metadata:
-  name: ksa-ehealth
-  namespace: keycloak
+  name: "realm-test"
+  namespace: "keycloak"
   annotations:
     # skip resource delete
     "idp.edenlab.io/preserve-resources-no-delete": "true"
 spec:
-  # Configuration to Keycloak cluster
-  configRef:
-    # Secret is a secret name which contains admin credentials.
-    secret: keycloak-ksa-ehealth-access
-
-    # URL of keycloak service.
-    url: "http://keycloak:8080"
-
   # ID is the ID of the realm.
-  id: ksa-ehealth
+  id: "realm-test"
 
   # RealmName specifies the name of the realm.
   #
   # Validations:
   # self == oldSelf: Value is immutable
-  realmName: ksa-ehealth
+  realmName: "realm-test"
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: "keycloak-realm-test-access"
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
 
   # OrganizationsEnabled enables Keycloak Organizations feature for this realm. When enabled, this realm can support Organization resources for multi-tenant scenarios, identity provider groupings, and domain-based user routing.
   # Organizations format supported Keycloak >= 25
   # Default: false
-  useOrganizations: false
+  useOrganizations: "false"
 
   # ReconciliationStrategy is a strategy to reconcile client.
   # enum: full;addOnly
   reconciliationStrategy: "noDelete"
 
   # Localization configures supported/default locales and custom message bundles (realm export field `localizationTexts`).
-  # localization:
-  #   # DefaultLocale is the realm default locale tag.
-  #   defaultLocale: "en"
-  #   # InternationalizationEnabled enables the realm internationalization feature.
-  #   internationalizationEnabled: false
-  #   # LocalizationTexts maps locale code to message key → translated text (same shape as Keycloak `localizationTexts` in a realm export).
-  #   localizationTexts:
-  #     en:
-  #       "test-code": "translation-text"
-  #   supportedLocales:
-  #     - "en"
+  localization:
+    # DefaultLocale is the realm default locale tag.
+    defaultLocale: "en"
+    # InternationalizationEnabled enables the realm internationalization feature.
+    internationalizationEnabled: "false"
+    # LocalizationTexts maps locale code to message key → translated text (same shape as Keycloak `localizationTexts` in a realm export).
+    localizationTexts:
+      en:
+        "test-code": "translation-text"
+    supportedLocales:
+      - "en"
 
   # Login settings for the realm.
   login:
     # LoginWithEmail allows users to log in with their email address.
     #
     # Default: true
-    loginWithEmail: true
+    loginWithEmail: "true"
 
     # DuplicateEmails allows multiple users to have the same email address.
     #
     # Default: false
-    duplicateEmails: false
+    duplicateEmails: "false"
 
     # VerifyEmail requires user to verify their email address after initial login or after address changes are submitted.
     #
     # Default: false
-    verifyEmail: true
+    verifyEmail: "true"
 
     # RememberMe shows checkbox on the login page to allow the user to remain logged in between browser restarts until the session expires.
     #
     # Default: false
-    rememberMe: false
+    rememberMe: "false"
 
     # UserRegistration enables/disables the registration page. A link for registration will show on the login page too.
     #
     # Default: false
-    userRegistration: true
+    userRegistration: "true"
 
     # EmailAsUsername allows users to set email as username.
     #
     # Default: false
-    emailAsUsername: false
+    emailAsUsername: "false"
 
     # EditUsername allows to edit username.
     #
     # Default: false
-    editUsername: false
+    editUsername: "false"
 
     # ForgotPassword shows a link on the login page for users who have forgotten their credentials.
     #
     # Default: false
-    forgotPassword: true
+    forgotPassword: "true"
 
   # TokenSettings is the configuration for tokens in the realm.
   tokenSettings:
     # AccessTokenLifespanForImplicitFlow specifies max time(in seconds) before an access token is expired for implicit flow.
     #
     # Default: 900
-    accessToken: 900
+    accessToken: "900"
 
     # DefaultSignatureAlgorithm specifies the default algorithm used to sign tokens for the realm
     #
     # Enum: ES256, ES384, ES512, EdDSA, HS256, HS384, HS512, PS256, PS384, PS512, RS256, RS384, RS512
     # Default: RS256
-    defaultSignatureAlgorithm: RS256
+    defaultSignatureAlgorithm: "RS256"
 
     # RevokeRefreshToken if enabled a refresh token can only be used up to 'refreshTokenMaxReuse' and is revoked when a different token is used. Otherwise, refresh tokens are not revoked when used and can be used multiple times.
     #
     # Default: false
-    revokeRefreshToken: true
+    revokeRefreshToken: "true"
 
     # RefreshTokenMaxReuse specifies maximum number of times a refresh token can be reused. When a different token is used, revocation is immediate.
     #
     # Default: 0
-    refreshTokenMaxReuse: 20
+    refreshTokenMaxReuse: "20"
 
     # AccessTokenLifespan specifies max time(in seconds) before an access token is expired. This value is recommended to be short relative to the SSO timeout.
     #
     # Default: 300
-    accessTokenLifespan: 36000            # 8 hours
+    accessTokenLifespan: "36000"
 
     # AccessCodeLifespan specifies max time(in seconds)a client has to finish the access token protocol. This should normally be 1 minute.
     #
     # Default: 60
-    accessCodeLifespan: 600
+    accessCodeLifespan: "600"
 
     # ActionTokenGeneratedByAdminLifespan specifies max time(in seconds) before an action permit sent to a user by administrator is expired. This value is recommended to be long to allow administrators to send e-mails for users that are currently offline. The default timeout can be overridden immediately before issuing the token.
     #
     # Default: 43200
-    actionTokenGeneratedByAdminLifespan: 43200  # 12 hours
+    actionTokenGeneratedByAdminLifespan: "43200"
 
     # AccessCodeLifespanUserAction specifies max time(in seconds) before an action permit sent by a user (such as a forgot password e-mail) is expired. This value is recommended to be short because it's expected that the user would react to self-created action quickly.
     #
     # Default: 300
-    actionTokenGeneratedByUserLifespan: 300     # 5 minutes
+    actionTokenGeneratedByUserLifespan: "300"
 
   # Sessions defines the session settings for the realm.
   sessions:
@@ -139,13 +139,13 @@ spec:
       # This is recommended to be relatively long, such as 30 minutes or more.
       #
       # Default: 1800
-      accessCodeLifespanLogin: 1800        # 5 minutes
+      accessCodeLifespanLogin: "1800"
 
       # AccessCodeLifespanUserAction represents the max time a user has to complete login
       # related actions like update password or configure totp. This is recommended to be relatively long, such as 5 minutes or more.
       #
       #Default: 300
-      accessCodeLifespanUserAction: 300  # 30 minutes
+      accessCodeLifespanUserAction: "300"
 
     # SSOSessionSettings defines the SSO session settings for the realm.
     ssoSessionSettings:
@@ -153,26 +153,26 @@ spec:
       # Tokens and browser sessions are invalidated when a session is expired.
       #
       # Default: 1800
-      idleTimeout: 86400                  # 8 hours
+      idleTimeout: "86400"
 
       # MaxLifespan represents the max time before a session is expired.
       # Tokens and browser sessions are invalidated when a session is expired.
       #
       # Default: 36000
-      maxLifespan: 259200                  # 10 hours
+      maxLifespan: "259200"
 
       # IdleTimeoutRememberMe represents the time a session is allowed to be idle before it expires.
       # Tokens and browser sessions are invalidated when a session is expired. If not set it uses the standard ssoSessionIdle value.
       #
       # Default: 0
-      idleTimeoutRememberMe: 0
+      idleTimeoutRememberMe: "0"
 
       # MaxLifespanRememberMe represents the max time before a session is expired when a user
       # has set the remember me option. Tokens and browser sessions are invalidated when a session is expired.
       # If not set it uses the standard ssoSessionMax value.
       #
       # Default: 0
-      maxLifespanRememberMe: 0
+      maxLifespanRememberMe: "0"
 
     # SSOOfflineSessionSettings defines the SSO offline session settings for the realm.
     ssoOfflineSessionSettings:
@@ -180,17 +180,17 @@ spec:
       # You need to use offline token to refresh at least once within this period; otherwise offline session will expire.
       #
       # Default: 2592000
-      idleTimeout: 2592000                # 30 days
+      idleTimeout: "2592000"
 
       # MaxLifespan represents the max time before an offline session is expired regardless of activity.
       #
       # Default: 5184000
-      maxLifespan: 5184000                # 60 days
+      maxLifespan: "5184000"
 
       # MaxLifespanEnabled enables the offline session maximum lifetime.
       #
       # Default: false
-      maxLifespanEnabled: false
+      maxLifespanEnabled: "false"
 
   # BrowserSecurityHeaders is a map of security headers to apply to HTTP responses from the realm's browser clients.
   browserSecurityHeaders:
@@ -204,19 +204,19 @@ spec:
     strictTransportSecurity: "max-age=31536000; includeSubDomains"
 
   # Themes is a map of themes to apply to the realm.
-  #  themes:
-  #    # AccountTheme specifies the account theme to use for the realm.
-  #    accountTheme: "wasfaty-theme"
-  #    # LoginTheme specifies the login theme to use for the realm.
-  #    loginTheme: "wasfaty-theme"
-  #    # EmailTheme specifies the email theme to use for the realm.
-  #    emailTheme: ""
-  #    # AdminConsoleTheme specifies the admin console theme to use for the realm.
-  #    adminConsoleTheme: ""
-  #    # InternationalizationEnabled indicates whether to enable internationalization.
-  #    # Deprecated: use spec.localization.internationalizationEnabled instead.
-  #    # This field duplicates that setting and will be removed in a future API version. If both are set, spec.localization wins.
-  #    internationalizationEnabled: false
+  themes:
+    # AccountTheme specifies the account theme to use for the realm.
+    accountTheme: "custom-theme"
+    # LoginTheme specifies the login theme to use for the realm.
+    loginTheme: "custom-theme"
+    # EmailTheme specifies the email theme to use for the realm.
+    emailTheme: ""
+    # AdminConsoleTheme specifies the admin console theme to use for the realm.
+    adminConsoleTheme: ""
+    # InternationalizationEnabled indicates whether to enable internationalization.
+    # Deprecated: use spec.localization.internationalizationEnabled instead.
+    # This field duplicates that setting and will be removed in a future API version. If both are set, spec.localization wins.
+    internationalizationEnabled: "false"
 
   # DisplayHTMLName name to render in the UI
   displayHtmlName: ""
@@ -238,93 +238,93 @@ spec:
   # RealmEventConfig is the configuration for events in the realm.
   realmEventConfig:
     # EventsEnabled indicates whether to enable events.
-    eventsEnabled: true
+    eventsEnabled: "true"
 
     # AdminEventsEnabled indicates whether to enable admin events.
-    adminEventsEnabled: true
+    adminEventsEnabled: "true"
 
     # AdminEventsDetailsEnabled indicates whether to enable detailed admin events.
-    adminEventsDetailsEnabled: true
+    adminEventsDetailsEnabled: "true"
 
     # AdminEventsExpiration sets the expiration for events in seconds. Expired events are periodically deleted from the database.
-    adminEventsExpiration: 2592000
+    adminEventsExpiration: "2592000"
 
     # EventsExpiration is the number of seconds after which events expire.
-    eventsExpiration: 0
+    eventsExpiration: "0"
 
     # EventsListeners is a list of event listeners to enable.
     eventsListeners:
-      - jboss-logging
+      - "jboss-logging"
 
     # EnabledEventTypes is a list of event types to enable.
     enabledEventTypes:
-      - VERIFY_EMAIL
+      - "VERIFY_EMAIL"
 
   # Smtp is the configuration for email in the realm.
   smtp:
     # Connection specifies the email connection configuration.
     connection:
       # Host specifies the email server host.
-      host: smtp-relay.brevo.com
+      host: "smtp-relay.com"
 
       # Port specifies the email server port.
       #
       # Default: 25
-      port: 587
+      port: "587"
 
       # EnableSSL specifies if SSL is enabled.
-      enableSSL: false
+      enableSSL: "false"
 
       # EnableStartTLS specifies if StartTLS is enabled.
-      enableStartTLS: false
+      enableStartTLS: "false"
 
       # Authentication specifies the email authentication configuration.
       authentication:
         # Username specifies login username.
         username:
           # Selects a key of a secret.
-          # secretKeyRef:
-          #   # The key of the secret to select from.
-          #   key: ""
-          #   # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-          #   #
-          #   # Default: ""
-          #   name: ""
+          secretKeyRef:
+            # The key of the secret to select from.
+            key: ""
+            # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+            #
+            # Default: ""
+            name: ""
           # Selects a key of a ConfigMap.
-          # configMapKeyRef:
-          #   # The key to select.
-          #   key: ""
-          #   # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-          #   #
-          #   # Default: ""
-          #   name: ""
+          configMapKeyRef:
+            # The key to select.
+            key: ""
+            # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+            #
+            # Default: ""
+            name: ""
           # Directly specifies a value.
-          value: "840e56005@smtp-brevo.com"
+          value: "12345678@smtp.com"
         # Password specifies login password.
         password:
-          # # Selects a key of a ConfigMap.
-          # configMapKeyRef:
-          #   # The key to select.
-          #   key: ""
-          #   # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-          #   #
-          #   # Default: ""
-          #   name: ""
+          # Selects a key of a ConfigMap.
+          configMapKeyRef:
+            # The key to select.
+            key: ""
+            # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+            #
+            # Default: ""
+            name: ""
           # Selects a key of a secret.
           secretKeyRef:
             # Name of the referent. This field is effectively required, but due to backwards compatibility is allowed to be empty. Instances of this type with an empty value here are almost certainly wrong. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
             #
             # Default: ""
-            name: ksa-ehealth-smtp-secret
+            name: "realm-test-smtp-secret"
             # The key of the secret to select from.
-            key: password
+            key: "password"
     # Template specifies the email template configuration.
     template:
       # From specifies the sender email address.
-      from: test@edenlab.com.ua
+      from: "test@domain.com.ua"
 
       # ReplyToDisplayName specifies display name for reply-to email address.
-      fromDisplayName: ksa-ehealth-develop
+      fromDisplayName: "realm-test-develop"
 
       # ReplyTo specifies the reply-to email address.
       replyTo: ""
@@ -368,10 +368,10 @@ spec:
 
     # Timeout (milliseconds) for credential creation ceremony.
     # 0 uses the browser/authenticator default.
-    createTimeout: 0
+    createTimeout: "0"
 
     # Prevent registration of the same authenticator multiple times.
-    avoidSameAuthenticatorRegister: false
+    avoidSameAuthenticatorRegister: "false"
 
     # Human-readable relying party name for passwordless authentication.
     passwordlessRpEntityName: "keycloak"
@@ -398,60 +398,60 @@ spec:
 
     # Timeout (milliseconds) for passwordless credential creation.
     # 0 uses the browser/authenticator default.
-    passwordlessCreateTimeout: 0
+    passwordlessCreateTimeout: "0"
 
     # Prevent registration of the same passwordless authenticator multiple times.
-    passwordlessAvoidSameAuthenticatorRegister: false
+    passwordlessAvoidSameAuthenticatorRegister: "false"
 
   # To configure Keycloak for the OAuth 2.0 Device Authorization Grant (often used for devices with limited input/browsers, like TVs or hardware encoders), you must enable the feature and then configure it both globally (or at the realm level) and per-client.
   oauth2DeviceSettings:
     # # Lifetime of the device authorization code in seconds.
     #  # The user must complete authorization before this code expires.
-    codeLifespan: 600
+    codeLifespan: "600"
 
     # Minimum interval (seconds) that clients must wait between
     # polling requests to the token endpoint.
-    pollingInterval: 5
+    pollingInterval: "5"
 
   # sslRequired is a realm-level configuration that determines
   # whether users must connect via HTTPS to interact with that specific realm.
   sslRequired: "external"
 
   # Brute force protection in keycloak
-  bruteForceProtected: false
+  bruteForceProtected: "false"
 
   # permanentLockout is a security feature within the Brute Force Detection
   # policy that disables a user account indefinitely after a specified number of failed login attempts.
-  permanentLockout: false
+  permanentLockout: "false"
 
   # maxFailureWaitSeconds is a Keycloak realm configuration property
   # that defines the maximum duration (in seconds) a user is temporarily locked out after exceeding
   # the allowed number of consecutive failed login attempts.
-  maxFailureWaitSeconds: 900
+  maxFailureWaitSeconds: "900"
 
   # minimumQuickLoginWaitSeconds is a parameter within the Brute Force Detection policy.
   # It defines the minimum duration in seconds a user must wait before attempting to log
   # in again after a recent quick sequence of failed login attempts.
-  minimumQuickLoginWaitSeconds: 60
+  minimumQuickLoginWaitSeconds: "60"
 
   # waitIncrementSeconds is a parameter used in the Brute Force Detection policy.
   # It defines the number of seconds the lockout duration increases each time a user
   # fails consecutive login attempts, after exceeding the failureFactor threshold.
-  waitIncrementSeconds: 60
+  waitIncrementSeconds: "60"
 
   # quickLoginCheckMilliSeconds is a Keycloak brute force detection setting
   # that determines the minimum allowed time between failed login attempts.
   # If a user makes multiple failed attempts quicker than this threshold,
   # Keycloak temporarily disables the account to prevent automated brute-force attacks
-  quickLoginCheckMilliSeconds: 1000
+  quickLoginCheckMilliSeconds: "1000"
 
   # maxDeltaTimeSeconds s a Keycloak brute force detection setting
-  maxDeltaTimeSeconds: 43200
+  maxDeltaTimeSeconds: "43200"
 
   # failureFactor is a configuration setting used within
   # Brute Force Detection to control how the system increases wait times (lockout durations)
   # after a user exceeds the maximum number of allowed login failures.
-  failureFactor: 30
+  failureFactor: "30"
 
   # A Keycloak registration flow is a sequence of steps that a user must complete to create a new account in a realm.
   registrationFlow: "registration"
@@ -476,7 +476,7 @@ spec:
 
   # The userManagedAccessAllowed is a setting within
   # Authorization Services that enables the User-Managed Access (UMA) 2.0 protocol for a specific resource.
-  userManagedAccessAllowed: false
+  userManagedAccessAllowed: "false"
 
   # keycloak attributes are custom key-value pairs used to store extra information about users, groups, or clients.
   # They are commonly used to include specific data—like an employee ID or department—within security tokens.
@@ -508,22 +508,22 @@ spec:
     algorithm: "HmacSHA1"
 
     # Allow reuse of the same OTP code within its validity period.
-    codeReusable: false
+    codeReusable: "false"
 
     # Number of digits in generated OTP codes.
-    digits: 6
+    digits: "6"
 
     # Initial counter value for HOTP.
     # Ignored when type is "totp".
-    initialCounter: 0
+    initialCounter: "0"
 
     # Number of adjacent OTP values accepted to compensate
     # for clock drift or counter synchronization issues.
-    lookAheadWindow: 1
+    lookAheadWindow: "1"
 
     # Validity period of a TOTP code in seconds.
     # Ignored when type is "hotp".
-    period: 30
+    period: "30"
 
     # OTP type.
     # Valid values: "totp", "hotp".
@@ -539,19 +539,19 @@ spec:
   clientSessionSettings:
     # Maximum inactivity period for authenticated client sessions.
     # 0 means the realm default is used.
-    idleTimeout: 0
+    idleTimeout: "0"
 
     # Maximum lifespan of authenticated client sessions.
     # 0 means the realm default is used.
-    maxLifespan: 0
+    maxLifespan: "0"
 
     # Maximum inactivity period for offline sessions.
     # 0 means the realm default is used.
-    offlineIdleTimeout: 0
+    offlineIdleTimeout: "0"
 
     # Maximum lifespan of offline sessions.
     # 0 means the realm default is used.
-    offlineMaxLifespan: 0
+    offlineMaxLifespan: "0"
 
   # # In Keycloak, defaultRole are roles automatically assigned to all newly created or imported users.
   # By default, Keycloak assigns the composite role default-roles-{realm_name} to all users.
@@ -559,17 +559,17 @@ spec:
   defaultRole:
     # Name of the realm's default role.
     # Automatically assigned to new users.
-    name: "default-roles-ksa-ehealth"
+    name: "default-roles-realm-test"
 
     # Human-readable description of the default role.
     description: "${role_default-roles}"
 
     # Indicates whether the role is composite
     # (contains other realm or client roles).
-    composite: true
+    composite: "true"
 
     # Realm identifier that owns this role.
-    containerId: "ksa-ehealth"
+    containerId: "realm-test"
 
   # The requiredCredentials concept at the realm level is deprecated.
   # It was historically used to define the types of credentials (e.g., passwords or OTP) required to authenticate users in a realm.
@@ -578,31 +578,31 @@ spec:
 
   roles:
       # Name of keycloak role.
-    - name: "wasfati-viewer"
+    - name: "viewer"
 
       # Description is a role description.
-      description: "wasfati-viewer"
+      description: "viewer"
 
       # Composite is a flag if role is composite.
-      composite: false
+      composite: "false"
 
       # Attributes is a map of role attributes.
       # type: map[string][]string
-      # attributes:
-      #  key:
-      #   - "go"
+      attributes:
+       key:
+        - "go"
 
       # IsDefault is a flag if role is default.
-      isDefault: false
+      isDefault: "false"
 
       # Composites is a list of composites roles assigned to role.
-      # composites:
-      #   - name: ""
+      composites:
+        - name: ""
 
       # CompositesClientRoles is a map of composites client roles assigned to role.
-      # compositesClientRoles:
-      #   test:
-      #     - name: ""
+      compositesClientRoles:
+        test:
+          - name: ""
 
   groups:
       # Name of keycloak group.
@@ -621,15 +621,15 @@ spec:
       subGroups: []
 
       # Attributes is a map of group attributes.
-      # attributes:
-      #   "attr_1": []
+      attributes:
+        "attr_1": []
 
       # ClientRoles is a list of client roles assigned to group.
-      # clientRoles:
-      #     # ClientID is a client ID.
-      #   - clientId: ""
-      #     # Roles is a list of client roles names assigned to user.
-      #     roles: []
+      clientRoles:
+          # ClientID is a client ID.
+        - clientId: ""
+          # Roles is a list of client roles names assigned to user.
+          roles: []
 
       # Name of keycloak group.
     - name: "child-test-group-1"
@@ -648,21 +648,21 @@ spec:
     - alias: "test-org-idp"
 
       # Enabled is a flag to enable/disable identity provider.
-      enabled: true
+      enabled: "true"
 
       # ProviderID is a provider ID of identity provider.
       providerId: "github"
 
       # AddReadTokenRoleOnCreate is a flag to add read token role on create.
-      addReadTokenRoleOnCreate: false
+      addReadTokenRoleOnCreate: "false"
 
       # AdminFineGrainedPermissionsEnabled enable/disable fine-grained admin permissions for an identity provider.
       # Feature flag admin-fine-grained-authz:v1 should be enabled in Keycloak server.
       # Important: FGAP:V1 Keycloak feature remains in preview and may be deprecated and removed in a future releases.
-      adminFineGrainedPermissionsEnabled: false
+      adminFineGrainedPermissionsEnabled: "false"
 
       # AuthenticateByDefault is a flag to authenticate by default.
-      authenticateByDefault: false
+      authenticateByDefault: "false"
 
       # DisplayName is a display name of identity provider.
       displayName: ""
@@ -673,38 +673,41 @@ spec:
       # HideOnLogin is a flag to hide the idp from the login page.
       # If hidden, login with this provider is possible only if requested explicitly,
       # for example using the 'kc_idp_hint' parameter.
-      hideOnLogin: false
+      hideOnLogin: "false"
 
       # LinkOnly is a flag to link only.
-      linkOnly: false
+      linkOnly: "false"
 
       # Mappers is a list of identity provider mappers.
-      # mappers:
-      #     # Name is a name of identity provider mapper.
-      #   - name: ""
-      #     # IdentityProviderAlias is a identity provider alias.
-      #     identityProviderAlias: ""
-      #     # IdentityProviderMapper is a identity provider mapper.
-      #     identityProviderMapper: ""
-      #     # Config is a map of identity provider mapper configuration.
-      #     config:
-      #       "key": "value"
+      mappers:
+          # Name is a name of identity provider mapper.
+        - name: ""
+
+          # IdentityProviderAlias is a identity provider alias.
+          identityProviderAlias: ""
+
+          # IdentityProviderMapper is a identity provider mapper.
+          identityProviderMapper: ""
+
+          # Config is a map of identity provider mapper configuration.
+          config:
+            "key": "value"
 
       # Permission is a identity provider permissions configuration
-      # permission:
-      #   # ScopePermissions mapping of scope and the policies attached
-      #   scopePermissions:
-      #     - name: ""
-      #       policies: []
+      permission:
+        # ScopePermissions mapping of scope and the policies attached
+        scopePermissions:
+          - name: ""
+            policies: []
 
       # PostBrokerLoginFlowAlias is a post broker login flow alias.
       postBrokerLoginFlowAlias: ""
 
       # StoreToken is a flag to store token.
-      storeToken: false
+      storeToken: "false"
 
       # TrustEmail is a flag to trust email.
-      trustEmail: false
+      trustEmail: "false"
 
       # Config is a map of identity provider configuration.
       # Map key is a name of configuration property, map value is a value of configuration property.
@@ -714,25 +717,3 @@ spec:
         clientSecret: "test-org-client-secret"
         kc.org.domain: "example.com"
         kc.org.broker.redirect.mode.email-matches: "true"
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-ksa-ehealth-access
-  namespace: keycloak
-data:
-  username: YWRtaW4=
-  password: YWRtaW4=
-
----
-# SMTP password secret (fill in actual value)
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ksa-ehealth-smtp-secret
-  namespace: keycloak
-type: Opaque
-data:
-  # base64-encoded SMTP password
-  password: ""

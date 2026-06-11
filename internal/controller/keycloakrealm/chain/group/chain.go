@@ -6,10 +6,18 @@ import (
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
+
+type FlushFunc func(
+	ctx context.Context,
+	kClientV2 *keycloakv2.KeycloakClient,
+	k8sClient client.Client,
+	realm *keycloakApiAlpha.KeycloakRealm,
+	groupIDs []string) error
 
 // GroupContext holds data that is passed between chain handlers.
 type GroupContext struct {
@@ -36,6 +44,7 @@ type RealmGroupHandler interface {
 // Chain executes a sequence of RealmGroupHandler handlers.
 type Chain struct {
 	handlers []RealmGroupHandler
+	flush    FlushFunc
 }
 
 func (ch *Chain) Use(handlers ...RealmGroupHandler) {
@@ -46,7 +55,9 @@ func (ch *Chain) Serve(
 	ctx context.Context,
 	realm *keycloakApiAlpha.KeycloakRealm,
 	kClientV2 *keycloakv2.KeycloakClient,
+	k8sClient client.Client,
 ) error {
+	groupIDs := make([]string, len(realm.Spec.Groups))
 	log := ctrl.LoggerFrom(ctx)
 
 	log.Info("Starting Keycloak Realm Group chain")
@@ -66,6 +77,12 @@ func (ch *Chain) Serve(
 		if err = ch.run(ctx, &group, kClientV2, groupCtx); err != nil {
 			return err
 		}
+
+		groupIDs = append(groupIDs, groupCtx.GroupID)
+	}
+
+	if err := ch.flush(ctx, kClientV2, k8sClient, realm, groupIDs); err != nil {
+		return err
 	}
 
 	log.Info("Handling of Keycloak Realm Group has been finished")
@@ -116,7 +133,9 @@ func (ch *Chain) getParentGroupID(
 }
 
 func MakeChain() *Chain {
-	ch := &Chain{}
+	ch := &Chain{
+		flush: NewFlush().Flush,
+	}
 
 	ch.Use(
 		NewCreateOrUpdateGroup(),

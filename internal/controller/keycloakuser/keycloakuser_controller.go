@@ -93,7 +93,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (c
 			return helper.RequeueOnKeycloakNotAvailable, nil
 		}
 
-		instance.Status.Value = err.Error()
+		instance.Status.Error = err.Error()
+		instance.Status.Phase = common.PhaseFailed
 
 		if statusErr := r.updateKeycloakUserStatus(ctx, &instance, oldStatus); statusErr != nil {
 			return ctrl.Result{}, statusErr
@@ -102,7 +103,7 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (c
 		return ctrl.Result{}, err
 	}
 
-	instance.Status.Value = common.StatusOK
+	instance.Status.Phase = common.PhaseCompleted
 	if statusErr := r.updateKeycloakUserStatus(ctx, &instance, oldStatus); statusErr != nil {
 		return ctrl.Result{}, statusErr
 	}

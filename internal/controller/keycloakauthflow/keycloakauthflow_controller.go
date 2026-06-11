@@ -155,7 +155,8 @@ func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloak
 		log.Error(err, "An error has occurred while handling KeycloakAuthFlow")
 
 		resultErr := fmt.Errorf("auth flow chain processing failed: %w", err)
-		instance.Status.Value = resultErr.Error()
+		instance.Status.Error = resultErr.Error()
+		instance.Status.Phase = common.PhaseFailed
 
 		if statusErr := r.updateKeycloakAuthFlowStatus(ctx, instance, oldStatus); statusErr != nil {
 			return reconcile.Result{}, fmt.Errorf("failed to update KeycloakAuthFlow status (%s): %w", resultErr, statusErr)
@@ -164,7 +165,7 @@ func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloak
 		return reconcile.Result{}, resultErr
 	}
 
-	instance.Status.Value = common.StatusOK
+	instance.Status.Phase = common.PhaseCompleted
 
 	if err := r.updateKeycloakAuthFlowStatus(ctx, instance, oldStatus); err != nil {
 		return reconcile.Result{}, err

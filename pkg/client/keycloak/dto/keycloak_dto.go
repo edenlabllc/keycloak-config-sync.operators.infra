@@ -133,28 +133,3 @@ type OrganizationDomain struct {
 type OrganizationIdentityProvider struct {
 	Alias string `json:"alias"`
 }
-
-// ConvertSpecToOrganization converts a KeycloakOrganization spec to an Organization.
-func ConvertSpecToOrganization(org *keycloakApiV1Alpha1.KeycloakOrganization) *Organization {
-	orgAdapter := &Organization{
-		Name:        org.Spec.Name,
-		Alias:       org.Spec.Alias,
-		Description: org.Spec.Description,
-		RedirectURL: org.Spec.RedirectURL,
-		Attributes:  org.Spec.Attributes,
-	}
-
-	// Convert domains to OrganizationDomain format
-	for _, domain := range org.Spec.Domains {
-		orgAdapter.Domains = append(orgAdapter.Domains, OrganizationDomain{
-			Name: domain,
-		})
-	}
-
-	// Set ID from status if available
-	if org.Status.OrganizationID != "" {
-		orgAdapter.ID = org.Status.OrganizationID
-	}
-
-	return orgAdapter
-}

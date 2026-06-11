@@ -368,3 +368,25 @@ func SortRealmGroupByParentFirstChild(items []keycloakApiAlpha.Group) []keycloak
 
 	return result
 }
+
+func RemoveDuplicates[T comparable](slice []T) []T {
+	seen := make(map[T]struct{})
+	result := []T{}
+
+	for _, val := range slice {
+		if _, exists := seen[val]; !exists {
+			seen[val] = struct{}{}
+			result = append(result, val)
+		}
+	}
+
+	return result
+}
+
+func RemoveSliceIndex[T any](s []T, i int) []T {
+	if i < 0 || i >= len(s) {
+		return s
+	}
+
+	return append(s[:i], s[i+1:]...)
+}

@@ -12,6 +12,8 @@ import (
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/secretref"
 )
 
+type FlushFunc func(ctx context.Context, realm *keycloakApiAlpha.KeycloakRealm, alias []string) error
+
 type ClientHandler interface {
 	Serve(
 		ctx context.Context,
@@ -22,6 +24,7 @@ type ClientHandler interface {
 
 type Chain struct {
 	handlers []ClientHandler
+	flush    FlushFunc
 }
 
 func (ch *Chain) Use(handlers ...ClientHandler) {
@@ -33,6 +36,7 @@ func (ch *Chain) Serve(
 	realm *keycloakApiAlpha.KeycloakRealm,
 ) error {
 	log := ctrl.LoggerFrom(ctx)
+	alias := make([]string, len(realm.Spec.IdentityProviders))
 
 	log.Info("Starting KeycloakIDP chain")
 
@@ -40,6 +44,12 @@ func (ch *Chain) Serve(
 		if err := ch.run(ctx, &ip, realm.Spec.RealmName, realm.Namespace); err != nil {
 			return err
 		}
+
+		alias = append(alias, ip.Alias)
+	}
+
+	if err := ch.flush(ctx, realm, alias); err != nil {
+		return err
 	}
 
 	log.Info("Handling of KeycloakIDP has been finished")
@@ -73,7 +83,9 @@ func MakeChain(
 	keycloakApiClient keycloak.Client,
 	k8sClient client.Client,
 ) *Chain {
-	c := &Chain{}
+	c := &Chain{
+		flush: NewFlush(keycloakApiClient, k8sClient).Flush,
+	}
 
 	c.Use(
 		NewPutIDP(keycloakApiClient, k8sClient, secretref.NewSecretRef(k8sClient)),

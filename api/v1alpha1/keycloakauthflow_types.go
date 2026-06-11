@@ -102,7 +102,10 @@ type AuthenticatorConfig struct {
 // KeycloakAuthFlowStatus defines the observed state of KeycloakAuthFlow.
 type KeycloakAuthFlowStatus struct {
 	// +optional
-	Value string `json:"value,omitempty"`
+	Error string `json:"error,omitempty"`
+
+	// +optional
+	Phase string `json:"phase,omitempty"`
 
 	// +optional
 	FailureCount int64 `json:"failureCount,omitempty"`
@@ -115,7 +118,9 @@ type KeycloakAuthFlowStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.value",description="Reconciliation status"
+// +kubebuilder:printcolumn:name="Realm",type="string",JSONPath=".spec.realmRef.name",description="Keycloak ref to realm name"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Reconciliation phase"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.error",description="Resource error"
 
 // KeycloakAuthFlow is the Schema for the keycloak authentication flow API.
 type KeycloakAuthFlow struct {
@@ -142,12 +147,12 @@ func (in *KeycloakAuthFlow) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in *KeycloakAuthFlow) GetStatus() string {
-	return in.Status.Value
+func (in *KeycloakAuthFlow) GetPhase() string {
+	return in.Status.Phase
 }
 
-func (in *KeycloakAuthFlow) SetStatus(value string) {
-	in.Status.Value = value
+func (in *KeycloakAuthFlow) SetPhase(value string) {
+	in.Status.Phase = value
 }
 
 // +kubebuilder:object:root=true

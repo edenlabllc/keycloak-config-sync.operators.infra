@@ -36,7 +36,6 @@ import (
 	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakorganization"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakrealm"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakscopemapping"
 
@@ -100,19 +99,7 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
-	//v := buildInfo.Get()
-
-	setupLog.Info(
-		"Starting the Keycloak Operator",
-		//"version", v.Version,
-		//"git-commit", v.GitCommit,
-		//"git-tag", v.GitTag,
-		//"build-date", v.BuildDate,
-		//"go-version", v.Go,
-		//"go-client", v.KubectlVersion,
-		//"platform", v.Platform,
-	)
+	setupLog.Info("Starting the Keycloak Operator")
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -282,12 +269,6 @@ func main() {
 	).
 		SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
 		setupLog.Error(err, "unable to create keycloak-realm-component controller")
-		os.Exit(1)
-	}
-
-	organizationCtrl := keycloakorganization.NewReconcileOrganization(mgr.GetClient(), h)
-	if err = organizationCtrl.SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create keycloak-organization controller")
 		os.Exit(1)
 	}
 

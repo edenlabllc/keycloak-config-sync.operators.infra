@@ -37,9 +37,6 @@ resources:
 - keycloakuser_admin_role.yaml
 - keycloakuser_editor_role.yaml
 - keycloakuser_viewer_role.yaml
-- keycloakorganization_admin_role.yaml
-- keycloakorganization_editor_role.yaml
-- keycloakorganization_viewer_role.yaml
 - keycloakscopemapping_admin_role.yaml
 - keycloakscopemapping_editor_role.yaml
 - keycloakscopemapping_viewer_role.yaml

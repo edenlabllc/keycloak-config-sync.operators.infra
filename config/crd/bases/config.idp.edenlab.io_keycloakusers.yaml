@@ -269,6 +269,8 @@ spec:
                   type: object
                 nullable: true
                 type: array
+              error:
+                type: string
               failureCount:
                 format: int64
                 type: integer
@@ -277,7 +279,7 @@ spec:
                   LastSyncedPasswordSecretVersion stores the ResourceVersion of the password secret
                   that was last successfully synced to Keycloak. Used to detect secret changes.
                 type: string
-              value:
+              phase:
                 type: string
             type: object
         type: object

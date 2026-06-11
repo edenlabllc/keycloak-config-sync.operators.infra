@@ -524,7 +524,19 @@ type KeycloakRealmStatus struct {
 	FailureCount int64 `json:"failureCount,omitempty"`
 
 	// +optional
-	Value string `json:"value,omitempty"`
+	Error string `json:"error,omitempty"`
+
+	// +optional
+	Phase string `json:"phase,omitempty"`
+
+	// +optional
+	RoleIDs map[string]string `json:"roleIDs,omitempty"`
+
+	// +optional
+	GroupIDs []string `json:"groupIDs,omitempty"`
+
+	// +optional
+	AliasIDPs []string `json:"aliasIDPs,omitempty"`
 }
 
 func (in *KeycloakRealm) GetFailureCount() int64 {
@@ -539,9 +551,9 @@ func (in *KeycloakRealm) SetFailureCount(count int64) {
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 // +kubebuilder:printcolumn:name="Available",type="boolean",JSONPath=".status.available",description="Is the resource available"
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.value",description="Reconciliation status"
-// +kubebuilder:printcolumn:name="Realm",type="boolean",JSONPath=".spec.realmName",description="Keycloak realm name"
-// +kubebuilder:printcolumn:name="Keycloak",type="boolean",JSONPath=".spec.keycloakRef",description="Keycloak instance name"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Reconciliation phase"
+// +kubebuilder:printcolumn:name="Realm",type="string",JSONPath=".spec.realmName",description="Keycloak realm name"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.error",description="Resource error"
 
 // KeycloakRealm is the Schema for the keycloak realms API.
 type KeycloakRealm struct {

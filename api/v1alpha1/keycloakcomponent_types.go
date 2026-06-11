@@ -52,7 +52,10 @@ type KeycloakComponentSpec struct {
 // KeycloakComponentStatus defines the observed state of KeycloakComponent.
 type KeycloakComponentStatus struct {
 	// +optional
-	Value string `json:"value,omitempty"`
+	Error string `json:"error,omitempty"`
+
+	// +optional
+	Phase string `json:"phase,omitempty"`
 
 	// +optional
 	FailureCount int64 `json:"failureCount,omitempty"`
@@ -74,7 +77,9 @@ type ParentComponent struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.value",description="Reconciliation status"
+// +kubebuilder:printcolumn:name="Realm",type="string",JSONPath=".spec.realmRef.name",description="Keycloak ref to realm name"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Reconciliation phase"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.error",description="Resource error"
 
 // KeycloakComponent is the Schema for the keycloak component API.
 type KeycloakComponent struct {
@@ -93,12 +98,12 @@ func (in *KeycloakComponent) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in *KeycloakComponent) GetStatus() string {
-	return in.Status.Value
+func (in *KeycloakComponent) GetPhase() string {
+	return in.Status.Phase
 }
 
-func (in *KeycloakComponent) SetStatus(value string) {
-	in.Status.Value = value
+func (in *KeycloakComponent) SetPhase(value string) {
+	in.Status.Phase = value
 }
 
 func (in *KeycloakComponent) GetRealmRef() common.RealmRef {

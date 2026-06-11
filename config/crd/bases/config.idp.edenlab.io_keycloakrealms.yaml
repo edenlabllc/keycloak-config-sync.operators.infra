@@ -19,18 +19,18 @@ spec:
       jsonPath: .status.available
       name: Available
       type: boolean
-    - description: Reconciliation status
-      jsonPath: .status.value
-      name: Status
+    - description: Reconciliation phase
+      jsonPath: .status.phase
+      name: Phase
       type: string
     - description: Keycloak realm name
       jsonPath: .spec.realmName
       name: Realm
-      type: boolean
-    - description: Keycloak instance name
-      jsonPath: .spec.keycloakRef
-      name: Keycloak
-      type: boolean
+      type: string
+    - description: Resource error
+      jsonPath: .status.error
+      name: Error
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -1231,13 +1231,27 @@ spec:
           status:
             description: KeycloakRealmStatus defines the observed state of KeycloakRealm.
             properties:
+              aliasIDPs:
+                items:
+                  type: string
+                type: array
               available:
                 type: boolean
+              error:
+                type: string
               failureCount:
                 format: int64
                 type: integer
-              value:
+              groupIDs:
+                items:
+                  type: string
+                type: array
+              phase:
                 type: string
+              roleIDs:
+                additionalProperties:
+                  type: string
+                type: object
             type: object
         type: object
     served: true

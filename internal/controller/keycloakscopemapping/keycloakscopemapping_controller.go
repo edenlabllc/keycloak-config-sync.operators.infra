@@ -103,7 +103,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 			return helper.RequeueOnKeycloakNotAvailable, nil
 		}
 
-		scope.Status.Value = err.Error()
+		scope.Status.Error = err.Error()
+		scope.Status.Phase = common.PhaseFailed
 
 		if statusErr := r.updateKeycloakScopeMappingStatus(ctx, scope, oldStatus); statusErr != nil {
 			return reconcile.Result{}, statusErr
@@ -112,7 +113,7 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
-	scope.Status.Value = common.StatusOK
+	scope.Status.Phase = common.PhaseCompleted
 	scope.Status.ID = id
 
 	if statusErr := r.updateKeycloakScopeMappingStatus(ctx, scope, oldStatus); statusErr != nil {

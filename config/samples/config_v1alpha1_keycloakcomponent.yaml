@@ -1,48 +1,47 @@
 apiVersion: config.idp.edenlab.io/v1alpha1
 kind: KeycloakComponent
 metadata:
-  name: keycloakcomponent-sample
-  namespace: keycloak
+  name: "keycloakcomponent-sample"
+  namespace: "keycloak"
   annotations:
     # skip resource delete
     "idp.edenlab.io/preserve-resources-no-delete": "true"
 spec:
-  # RealmRef is reference to Realm custom resource.
   realmRef:
     # Kind specifies the kind of the Keycloak resource.
     #
     # Default: KeycloakRealm
-    kind: KeycloakRealm
+    kind: "KeycloakRealm"
 
     # Name specifies the name of the Keycloak resource.
-    name: ksa-ehealth
+    name: "realm-test"
 
   # Configuration to Keycloak cluster
   configRef:
     # Secret is a secret name which contains admin credentials.
-    secret: keycloak-ksa-ehealth-access
+    secret: "keycloak-realm-test-access"
 
     # URL of keycloak service.
     url: "http://keycloak:8080"
 
   # Name of keycloak component.
-  name: cr-kerb-test
+  name: "cr-kerb-test"
 
   # ProviderID is a provider ID of component.
-  providerId: kerberos
+  providerId: "kerberos"
 
   # ProviderType is a provider type of component.
   providerType: "org.keycloak.storage.UserStorageProvider"
 
   # ParentRef specifies a parent resource. If not specified, then parent is realm specified in realm field.
-  # parentRef:
-  #   # Kind is a kind of parent component. By default, it is KeycloakRealm.
-  #   #
-  #   # Default: KeycloakRealm
-  #   kind: "KeycloakRealm"
-  #   # Name is a name of parent component custom resource. For example,
-  #   # if Kind is KeycloakRealm, then Name is name of KeycloakRealm custom resource.
-  #   name: ""
+  parentRef:
+    # Kind is a kind of parent component. By default, it is KeycloakRealm.
+    #
+    # Default: KeycloakRealm
+    kind: "KeycloakRealm"
+    # Name is a name of parent component custom resource. For example,
+    # if Kind is KeycloakRealm, then Name is name of KeycloakRealm custom resource.
+    name: ""
 
   # Config is a map of component configuration. Map key is a name of configuration property,
   # map value is an array value of configuration properties.

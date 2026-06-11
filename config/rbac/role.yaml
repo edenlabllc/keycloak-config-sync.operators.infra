@@ -37,7 +37,6 @@ rules:
   - keycloakauthflows
   - keycloakclients
   - keycloakcomponents
-  - keycloakorganizations
   - keycloakrealms
   - keycloakscopemappings
   - keycloakusers
@@ -55,7 +54,6 @@ rules:
   - keycloakauthflows/finalizers
   - keycloakclients/finalizers
   - keycloakcomponents/finalizers
-  - keycloakorganizations/finalizers
   - keycloakrealms/finalizers
   - keycloakscopemappings/finalizers
   - keycloakusers/finalizers
@@ -67,7 +65,6 @@ rules:
   - keycloakauthflows/status
   - keycloakclients/status
   - keycloakcomponents/status
-  - keycloakorganizations/status
   - keycloakrealms/status
   - keycloakscopemappings/status
   - keycloakusers/status

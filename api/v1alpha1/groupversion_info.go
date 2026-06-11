@@ -21,13 +21,9 @@ var (
 )
 
 const (
-	// TODO: old need remove
-	ClusterKeycloakKind      = "ClusterKeycloak"
-	ClusterKeycloakRealmKind = "ClusterKeycloakRealm"
-
 	// KeycloakRealmKind is a string value of the kind of KeycloakClient CR.
 	KeycloakRealmKind = "KeycloakRealm"
+
 	// KeycloakRealmComponentKind is a string value of the kind of KeycloakClient CR.
 	KeycloakRealmComponentKind = "KeycloakRealmComponent"
-	KeycloakKind               = "Keycloak"
 )

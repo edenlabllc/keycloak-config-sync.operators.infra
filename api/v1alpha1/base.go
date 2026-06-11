@@ -11,7 +11,5 @@ const (
 	// ClientSecretKey is a key for client secret in secret data.
 	ClientSecretKey = "clientSecret"
 
-	// TODO: ??
-	KeycloakAdminTypeUser           = "user"
 	KeycloakAdminTypeServiceAccount = "serviceAccount"
 )

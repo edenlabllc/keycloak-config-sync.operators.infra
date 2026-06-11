@@ -5,10 +5,16 @@ import (
 	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
+
+type FlushFunc func(
+	ctx context.Context,
+	realm *keycloakApi.KeycloakRealm,
+	rIDs map[string]string) error
 
 // RoleContext holds data that is passed between chain handlers.
 type RoleContext struct {
@@ -27,6 +33,7 @@ type RealmRoleHandler interface {
 
 type Chain struct {
 	handlers []RealmRoleHandler
+	flush    FlushFunc
 }
 
 func (ch *Chain) Use(handlers ...RealmRoleHandler) {
@@ -37,6 +44,7 @@ func (ch *Chain) Serve(
 	ctx context.Context,
 	realm *keycloakApi.KeycloakRealm,
 ) error {
+	rIDs := make(map[string]string, len(realm.Spec.Roles))
 	log := ctrl.LoggerFrom(ctx)
 
 	log.Info("Starting Keycloak Realm Role chain")
@@ -47,6 +55,12 @@ func (ch *Chain) Serve(
 		if err := ch.run(ctx, &role, realm.Spec.RealmName, roleCtx); err != nil {
 			return err
 		}
+
+		rIDs[role.Name] = roleCtx.RoleID
+	}
+
+	if err := ch.flush(ctx, realm, rIDs); err != nil {
+		return err
 	}
 
 	log.Info("Handling of KeycloakRealmRole has been finished")
@@ -78,8 +92,12 @@ func (ch *Chain) run(
 	return nil
 }
 
-func MakeChain(kClientV2 *keycloakv2.KeycloakClient) *Chain {
-	ch := &Chain{}
+func MakeChain(
+	kClientV2 *keycloakv2.KeycloakClient,
+	k8sClient client.Client) *Chain {
+	ch := &Chain{
+		flush: NewFlush(kClientV2, k8sClient).Flush,
+	}
 
 	ch.Use(
 		NewCreateOrUpdateRole(kClientV2),

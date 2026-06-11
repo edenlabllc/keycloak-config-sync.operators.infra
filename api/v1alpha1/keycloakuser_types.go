@@ -126,9 +126,6 @@ type PasswordSecret struct {
 // KeycloakUserStatus defines the observed state of KeycloakUser.
 type KeycloakUserStatus struct {
 	// +optional
-	Value string `json:"value,omitempty"`
-
-	// +optional
 	FailureCount int64 `json:"failureCount,omitempty"`
 
 	// Conditions represent the latest available observations of an object's state.
@@ -140,6 +137,12 @@ type KeycloakUserStatus struct {
 	// that was last successfully synced to Keycloak. Used to detect secret changes.
 	// +optional
 	LastSyncedPasswordSecretVersion string `json:"lastSyncedPasswordSecretVersion,omitempty"`
+
+	// +optional
+	Error string `json:"error,omitempty"`
+
+	// +optional
+	Phase string `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -176,12 +179,12 @@ func (in *KeycloakUser) SetFailureCount(count int64) {
 	in.Status.FailureCount = count
 }
 
-func (in *KeycloakUser) GetStatus() string {
-	return in.Status.Value
+func (in *KeycloakUser) GetPhase() string {
+	return in.Status.Phase
 }
 
-func (in *KeycloakUser) SetStatus(value string) {
-	in.Status.Value = value
+func (in *KeycloakUser) SetPhase(value string) {
+	in.Status.Phase = value
 }
 
 func (in *KeycloakUser) GetRealmRef() common.RealmRef {

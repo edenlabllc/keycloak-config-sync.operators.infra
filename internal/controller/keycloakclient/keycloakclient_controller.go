@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v12"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
 	chainClient "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient/chain/client"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -108,7 +109,8 @@ func (r *ReconcileKeycloakClientSettings) Reconcile(ctx context.Context, request
 		})
 
 		// Backward compatibility: set Value field
-		instance.Status.Value = err.Error()
+		instance.Status.Error = err.Error()
+		instance.Status.Phase = common.PhaseFailed
 		result.RequeueAfter = r.helper.SetFailureCount(&instance)
 
 		log.Error(err, "an error has occurred while handling keycloak client settings", "name", request.Name)
