@@ -5,7 +5,7 @@ metadata:
   namespace: "keycloak"
   annotations:
     # skip resource delete
-    "idp.edenlab.io/preserve-resources-no-delete": "true"
+    idp.edenlab.io/preserve-resources-no-delete: "true"
 spec:
   realmRef:
     # Name specifies the name of the Keycloak resource.
@@ -75,7 +75,7 @@ spec:
 
         # Config is configuration for authenticator.
         config:
-          "defaultProvider": "my-alias"
+          defaultProvider: "my-alias"
 
       # AuthenticatorFlow is true if this is auth flow.
       authenticatorFlow: "false"

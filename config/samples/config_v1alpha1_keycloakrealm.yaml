@@ -5,7 +5,7 @@ metadata:
   namespace: "keycloak"
   annotations:
     # skip resource delete
-    "idp.edenlab.io/preserve-resources-no-delete": "true"
+    idp.edenlab.io/preserve-resources-no-delete: "true"
 spec:
   # ID is the ID of the realm.
   id: "realm-test"
@@ -42,7 +42,7 @@ spec:
     # LocalizationTexts maps locale code to message key → translated text (same shape as Keycloak `localizationTexts` in a realm export).
     localizationTexts:
       en:
-        "test-code": "translation-text"
+        test-code: "translation-text"
     supportedLocales:
       - "en"
 
@@ -622,7 +622,7 @@ spec:
 
       # Attributes is a map of group attributes.
       attributes:
-        "attr_1": []
+        attr_1: []
 
       # ClientRoles is a list of client roles assigned to group.
       clientRoles:
@@ -691,7 +691,7 @@ spec:
 
           # Config is a map of identity provider mapper configuration.
           config:
-            "key": "value"
+            key: "value"
 
       # Permission is a identity provider permissions configuration
       permission:

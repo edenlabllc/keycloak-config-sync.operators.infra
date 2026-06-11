@@ -5,7 +5,7 @@ metadata:
   namespace: "keycloak"
   annotations:
     # skip resource delete
-    "idp.edenlab.io/preserve-resources-no-delete": "true"
+    idp.edenlab.io/preserve-resources-no-delete: "true"
 spec:
   realmRef:
     # Kind specifies the kind of the Keycloak resource.
