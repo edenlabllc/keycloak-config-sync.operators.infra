@@ -502,6 +502,18 @@ func (in *KeycloakClient) SetPhase(value string) {
 	in.Status.Phase = value
 }
 
+func (in *KeycloakClient) GetError() string {
+	return in.Status.Error
+}
+
+func (in *KeycloakClient) SetError(err error) {
+	if err != nil {
+		in.Status.Error = err.Error()
+	}
+
+	in.Status.Error = ""
+}
+
 func (in *KeycloakClient) GetRealmRef() common.RealmRef {
 	return in.Spec.RealmRef
 }

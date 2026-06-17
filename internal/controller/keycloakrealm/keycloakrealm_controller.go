@@ -111,6 +111,7 @@ func (r *ReconcileKeycloakRealm) Reconcile(ctx context.Context, request reconcil
 		log.Error(err, "an error has occurred while handling keycloak realm", "name", request.Name)
 	} else {
 		instance.Status.Available = true
+		instance.Status.Error = ""
 		instance.Status.Phase = common.PhaseCompleted
 		instance.Status.FailureCount = 0
 		result.RequeueAfter = r.successReconcileTimeout

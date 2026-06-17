@@ -165,6 +165,7 @@ func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloak
 		return reconcile.Result{}, resultErr
 	}
 
+	instance.Status.Error = ""
 	instance.Status.Phase = common.PhaseCompleted
 
 	if err := r.updateKeycloakAuthFlowStatus(ctx, instance, oldStatus); err != nil {

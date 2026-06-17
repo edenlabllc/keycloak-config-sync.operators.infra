@@ -103,6 +103,7 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (c
 		return ctrl.Result{}, err
 	}
 
+	instance.Status.Error = ""
 	instance.Status.Phase = common.PhaseCompleted
 	if statusErr := r.updateKeycloakUserStatus(ctx, &instance, oldStatus); statusErr != nil {
 		return ctrl.Result{}, statusErr

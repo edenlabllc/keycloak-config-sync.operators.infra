@@ -148,7 +148,9 @@ type KeycloakUserStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.value",description="Reconciliation status"
+// +kubebuilder:printcolumn:name="Realm",type="string",JSONPath=".spec.realmRef.name",description="Keycloak ref to realm name"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Reconciliation phase"
+// +kubebuilder:printcolumn:name="Error",type="string",JSONPath=".status.error",description="Resource error"
 
 // KeycloakUser is the Schema for the keycloak user API.
 type KeycloakUser struct {
@@ -185,6 +187,18 @@ func (in *KeycloakUser) GetPhase() string {
 
 func (in *KeycloakUser) SetPhase(value string) {
 	in.Status.Phase = value
+}
+
+func (in *KeycloakUser) GetError() string {
+	return in.Status.Error
+}
+
+func (in *KeycloakUser) SetError(err error) {
+	if err != nil {
+		in.Status.Error = err.Error()
+	}
+
+	in.Status.Error = ""
 }
 
 func (in *KeycloakUser) GetRealmRef() common.RealmRef {

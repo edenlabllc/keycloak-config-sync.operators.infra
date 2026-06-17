@@ -155,6 +155,18 @@ func (in *KeycloakAuthFlow) SetPhase(value string) {
 	in.Status.Phase = value
 }
 
+func (in *KeycloakAuthFlow) GetError() string {
+	return in.Status.Error
+}
+
+func (in *KeycloakAuthFlow) SetError(err error) {
+	if err != nil {
+		in.Status.Error = err.Error()
+	}
+
+	in.Status.Error = ""
+}
+
 // +kubebuilder:object:root=true
 
 // KeycloakAuthFlowList contains a list of KeycloakAuthFlow.

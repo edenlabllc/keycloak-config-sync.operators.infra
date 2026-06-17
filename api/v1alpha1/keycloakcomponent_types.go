@@ -106,6 +106,18 @@ func (in *KeycloakComponent) SetPhase(value string) {
 	in.Status.Phase = value
 }
 
+func (in *KeycloakComponent) GetError() string {
+	return in.Status.Error
+}
+
+func (in *KeycloakComponent) SetError(err error) {
+	if err != nil {
+		in.Status.Error = err.Error()
+	}
+
+	in.Status.Error = ""
+}
+
 func (in *KeycloakComponent) GetRealmRef() common.RealmRef {
 	return in.Spec.RealmRef
 }

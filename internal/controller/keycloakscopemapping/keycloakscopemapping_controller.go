@@ -113,6 +113,7 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
+	scope.Status.Error = ""
 	scope.Status.Phase = common.PhaseCompleted
 	scope.Status.ID = id
 
