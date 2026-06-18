@@ -17,8 +17,7 @@ import (
 func NewMockGoCloak(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockGoCloak {
+}) *MockGoCloak {
 	mock := &MockGoCloak{}
 	mock.Mock.Test(t)
 

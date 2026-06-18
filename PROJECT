@@ -3,7 +3,7 @@
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
 cliVersion: 4.14.0
-domain: edp.edenlab.io
+domain: idp.edenlab.io
 layout:
 - go.kubebuilder.io/v4
 plugins:
@@ -18,29 +18,20 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: Keycloak
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
+  domain: idp.edenlab.io
+  group: config
   kind: KeycloakAuthFlow
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
+  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
+  domain: idp.edenlab.io
+  group: config
   kind: KeycloakClient
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
+  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
+  version: v1alpha1
   webhooks:
     defaulting: true
     webhookVersion: v1
@@ -48,29 +39,20 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakClientScope
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
+  domain: idp.edenlab.io
+  group: config
+  kind: KeycloakComponent
+  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmComponent
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
+  domain: idp.edenlab.io
+  group: config
   kind: KeycloakRealm
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
+  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
+  version: v1alpha1
   webhooks:
     validation: true
     webhookVersion: v1
@@ -78,88 +60,18 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmGroup
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
+  domain: idp.edenlab.io
+  group: config
+  kind: KeycloakUser
+  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
+  version: v1alpha1
 - api:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmIdentityProvider
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmRole
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmRoleBatch
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakRealmUser
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
+  domain: idp.edenlab.io
+  group: config
   kind: KeycloakScopeMapping
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakClientScopeMapping
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1
-  version: v1
-- api:
-    crdVersion: v1
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: ClusterKeycloak
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: ClusterKeycloakRealm
-  path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: edp.edenlab.io
-  group: v1
-  kind: KeycloakOrganization
   path: github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1
   version: v1alpha1
 version: "3"

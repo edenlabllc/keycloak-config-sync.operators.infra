@@ -15,8 +15,7 @@ import (
 func NewMockRefClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockRefClient {
+}) *MockRefClient {
 	mock := &MockRefClient{}
 	mock.Mock.Test(t)
 

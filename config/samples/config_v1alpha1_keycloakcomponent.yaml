@@ -1,0 +1,63 @@
+apiVersion: config.idp.edenlab.io/v1alpha1
+kind: KeycloakComponent
+metadata:
+  name: "keycloakcomponent-sample"
+  namespace: "keycloak"
+  annotations:
+    # skip resource delete
+    idp.edenlab.io/preserve-resources-no-delete: "true"
+spec:
+  realmRef:
+    # Kind specifies the kind of the Keycloak resource.
+    #
+    # Default: KeycloakRealm
+    kind: "KeycloakRealm"
+
+    # Name specifies the name of the Keycloak resource.
+    name: "realm-test"
+
+  # Configuration to Keycloak cluster
+  configRef:
+    # Secret is a secret name which contains admin credentials.
+    secret: "keycloak-realm-test-access"
+
+    # URL of keycloak service.
+    url: "http://keycloak:8080"
+
+  # Name of keycloak component.
+  name: "cr-kerb-test"
+
+  # ProviderID is a provider ID of component.
+  providerId: "kerberos"
+
+  # ProviderType is a provider type of component.
+  providerType: "org.keycloak.storage.UserStorageProvider"
+
+  # ParentRef specifies a parent resource. If not specified, then parent is realm specified in realm field.
+  parentRef:
+    # Kind is a kind of parent component. By default, it is KeycloakRealm.
+    #
+    # Default: KeycloakRealm
+    kind: "KeycloakRealm"
+    # Name is a name of parent component custom resource. For example,
+    # if Kind is KeycloakRealm, then Name is name of KeycloakRealm custom resource.
+    name: ""
+
+  # Config is a map of component configuration. Map key is a name of configuration property,
+  # map value is an array value of configuration properties.
+  # Any configuration property can be a reference to k8s secret,
+  # in this case the property should be in format $secretName:secretKey.
+  config:
+    allowPasswordAuthentication: ["true"]
+    cachePolicy: ["EVICT_WEEKLY"]
+    debug: ["true"]
+    editMode: ["READ_ONLY"]
+    enabled: ["true"]
+    evictionDay: ["3"]
+    evictionHour: ["5"]
+    evictionMinute: ["7"]
+    kerberosRealm: ["test-realm"]
+    keyTab: ["test-key-tab"]
+    priority: ["0"]
+    serverPrincipal: ["srv-principal-test"]
+    updateProfileFirstLogin: ["true"]

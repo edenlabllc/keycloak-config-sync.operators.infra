@@ -10,8 +10,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
 
@@ -29,7 +28,7 @@ type commonRealmSpec struct {
 	RequiredCredentials          []string
 	TokenSettings                *common.TokenSettings
 	RealmEventConfig             *common.RealmEventConfig
-	Login                        *keycloakApi.RealmLogin
+	Login                        *keycloakApiAlpha.RealmLogin
 	Sessions                     *common.RealmSessions
 	WebAuthnPolicySettings       *common.WebAuthnPolicySettings
 	Oauth2DeviceSettings         *common.Oauth2DeviceSettings
@@ -119,7 +118,7 @@ func ApplyRealmSettings(
 // TODO: need fix this fields, add option if useOrganizations == true, use this variable OrganizationsEnabled
 // BuildRealmRepresentationFromV1 builds a keycloakv2.RealmRepresentation with only the
 // operator-managed fields populated from a v1.KeycloakRealm spec.
-func BuildRealmRepresentationFromV1(realm *keycloakApi.KeycloakRealm) keycloakv2.RealmRepresentation {
+func BuildRealmRepresentationFromV1(realm *keycloakApiAlpha.KeycloakRealm) keycloakv2.RealmRepresentation {
 	spec := &realm.Spec
 
 	c := commonRealmSpec{
@@ -168,67 +167,6 @@ func BuildRealmRepresentationFromV1(realm *keycloakApi.KeycloakRealm) keycloakv2
 		c.AdminTheme = spec.Themes.AdminConsoleTheme
 		c.EmailTheme = spec.Themes.EmailTheme
 		c.InternationalizationEnabled = spec.Themes.InternationalizationEnabled
-	}
-
-	return buildRealmRepresentationFromCommon(c)
-}
-
-// nolint:dupl
-// TODO: need fix this fields, add option if useOrganizations == true, use this variable OrganizationsEnabled
-// BuildRealmRepresentationFromV1Alpha1 builds a keycloakv2.RealmRepresentation with only the
-// operator-managed fields populated from a v1alpha1.ClusterKeycloakRealm spec.
-func BuildRealmRepresentationFromV1Alpha1(realm *v1alpha1.ClusterKeycloakRealm) keycloakv2.RealmRepresentation {
-	spec := &realm.Spec
-
-	c := commonRealmSpec{
-		DisplayName:                  spec.DisplayName,
-		RequiredCredentials:          spec.RequiredCredentials,
-		SslRequired:                  spec.SSLRequired,
-		DisplayHTMLName:              spec.DisplayHTMLName,
-		FrontendURL:                  spec.FrontendURL,
-		BrowserSecurityHeaders:       spec.BrowserSecurityHeaders,
-		TokenSettings:                spec.TokenSettings,
-		RealmEventConfig:             spec.RealmEventConfig,
-		Login:                        spec.Login,
-		WebAuthnPolicySettings:       spec.WebAuthnPolicySettings,
-		Oauth2DeviceSettings:         spec.Oauth2DeviceSettings,
-		OTPPolicySettings:            spec.OTPPolicySettings,
-		ClientSessionSettings:        spec.ClientSessionSettings,
-		Sessions:                     spec.Sessions,
-		PasswordPolicy:               buildPasswordPolicy(spec.PasswordPolicies),
-		BruteForceProtected:          spec.BruteForceProtected,
-		PermanentLockout:             spec.PermanentLockout,
-		MaxFailureWaitSeconds:        spec.MaxFailureWaitSeconds,
-		MinimumQuickLoginWaitSeconds: spec.MinimumQuickLoginWaitSeconds,
-		WaitIncrementSeconds:         spec.WaitIncrementSeconds,
-		QuickLoginCheckMilliSeconds:  spec.QuickLoginCheckMilliSeconds,
-		MaxDeltaTimeSeconds:          spec.MaxDeltaTimeSeconds,
-		FailureFactor:                spec.FailureFactor,
-		SupportedLocales:             spec.SupportedLocales,
-		RegistrationFlow:             spec.RegistrationFlow,
-		DirectGrantFlow:              spec.DirectGrantFlow,
-		ResetCredentialsFlow:         spec.ResetCredentialsFlow,
-		ClientAuthenticationFlow:     spec.ClientAuthenticationFlow,
-		DockerAuthenticationFlow:     spec.DockerAuthenticationFlow,
-		UserManagedAccessAllowed:     spec.UserManagedAccessAllowed,
-		Attributes:                   spec.Attributes,
-		DefaultRole:                  spec.DefaultRole,
-	}
-
-	if spec.UseOrganizations {
-		c.UseOrganizations = spec.UseOrganizations
-		c.OrganizationsEnabled = spec.OrganizationsEnabled
-	}
-
-	if spec.Themes != nil {
-		c.LoginTheme = spec.Themes.LoginTheme
-		c.AccountTheme = spec.Themes.AccountTheme
-		c.AdminTheme = spec.Themes.AdminConsoleTheme
-		c.EmailTheme = spec.Themes.EmailTheme
-	}
-
-	if spec.Localization != nil {
-		c.InternationalizationEnabled = spec.Localization.InternationalizationEnabled
 	}
 
 	return buildRealmRepresentationFromCommon(c)

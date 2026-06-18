@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v12"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -17,7 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter"
@@ -32,7 +32,7 @@ type Helper interface {
 	TryToDelete(ctx context.Context, obj client.Object, terminator helper.Terminator, finalizer string) (isDeleted bool, resultErr error)
 	SetRealmOwnerRef(ctx context.Context, object helper.ObjectWithRealmRef) error
 	GetKeycloakRealmFromRef(ctx context.Context, object helper.ObjectWithRealmRef, kcClient keycloak.Client) (*gocloak.RealmRepresentation, error)
-	CreateKeycloakClientFromRealmRef(ctx context.Context, object helper.ObjectWithRealmRef) (keycloak.Client, error)
+	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
 }
 
 type Reconcile struct {
@@ -53,7 +53,7 @@ func (r *Reconcile) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	err := ctrl.NewControllerManagedBy(mgr).
-		For(&keycloakApi.KeycloakScopeMapping{}, builder.WithPredicates(pred)).
+		For(&keycloakApiAlpha.KeycloakScopeMapping{}, builder.WithPredicates(pred)).
 		Complete(r)
 	if err != nil {
 		return fmt.Errorf("failed to setup KeycloakScopeMapping controller: %w", err)
@@ -63,12 +63,12 @@ func (r *Reconcile) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func isSpecUpdated(e event.UpdateEvent) bool {
-	oo, ok := e.ObjectOld.(*keycloakApi.KeycloakScopeMapping)
+	oo, ok := e.ObjectOld.(*keycloakApiAlpha.KeycloakScopeMapping)
 	if !ok {
 		return false
 	}
 
-	no, ok := e.ObjectNew.(*keycloakApi.KeycloakScopeMapping)
+	no, ok := e.ObjectNew.(*keycloakApiAlpha.KeycloakScopeMapping)
 	if !ok {
 		return false
 	}
@@ -77,16 +77,16 @@ func isSpecUpdated(e event.UpdateEvent) bool {
 		(oo.GetDeletionTimestamp().IsZero() && !no.GetDeletionTimestamp().IsZero())
 }
 
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=v1.edp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings/finalizers,verbs=update
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=config.idp.edenlab.io,namespace=keycloak,resources=keycloakscopemappings/finalizers,verbs=update
 
 // Reconcile is a loop for reconciling KeycloakScopeMapping object.
 func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Reconciling KeycloakScopeMapping")
 
-	scope := &keycloakApi.KeycloakScopeMapping{}
+	scope := &keycloakApiAlpha.KeycloakScopeMapping{}
 	if err := r.client.Get(ctx, request.NamespacedName, scope); err != nil {
 		if k8sErrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -103,7 +103,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 			return helper.RequeueOnKeycloakNotAvailable, nil
 		}
 
-		scope.Status.Value = err.Error()
+		scope.Status.Error = err.Error()
+		scope.Status.Phase = common.PhaseFailed
 
 		if statusErr := r.updateKeycloakScopeMappingStatus(ctx, scope, oldStatus); statusErr != nil {
 			return reconcile.Result{}, statusErr
@@ -112,7 +113,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
-	scope.Status.Value = common.StatusOK
+	scope.Status.Error = ""
+	scope.Status.Phase = common.PhaseCompleted
 	scope.Status.ID = id
 
 	if statusErr := r.updateKeycloakScopeMappingStatus(ctx, scope, oldStatus); statusErr != nil {
@@ -124,13 +126,13 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	return reconcile.Result{}, nil
 }
 
-func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApi.KeycloakScopeMapping) (string, error) {
+func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha.KeycloakScopeMapping) (string, error) {
 	err := r.helper.SetRealmOwnerRef(ctx, instance)
 	if err != nil {
 		return "", fmt.Errorf("unable to set realm owner ref: %w", err)
 	}
 
-	cl, err := r.helper.CreateKeycloakClientFromRealmRef(ctx, instance)
+	cl, err := r.helper.CreateKeycloakClientFromConfigRef(ctx, instance)
 	if err != nil {
 		// if the realm is already deleted try to delete finalizer
 		if errors.Is(err, helper.ErrKeycloakRealmNotFound) {
@@ -149,7 +151,7 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApi.Keyc
 		return "", fmt.Errorf("unable to get keycloak realm from ref: %w", err)
 	}
 
-	scopeID, err := syncClientScopeMapping(ctx, instance, gocloak.PString(realm.Realm), cl)
+	id, err := r.Sync(ctx, instance, gocloak.PString(realm.Realm), cl)
 	if err != nil {
 		return "", fmt.Errorf("unable to sync scope mapping: %w", err)
 	}
@@ -160,6 +162,8 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApi.Keyc
 			cl,
 			gocloak.PString(realm.Realm),
 			instance.Status.ID,
+			instance.Spec.ClientScope,
+			instance.Spec.Client,
 			getAdapterRoles(instance),
 			objectmeta.PreserveResourcesOnDeletion(instance),
 		),
@@ -168,13 +172,30 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApi.Keyc
 		return "", fmt.Errorf("unable to delete scope mapping: %w", err)
 	}
 
-	return scopeID, nil
+	return id, nil
+}
+
+func (r *Reconcile) Sync(ctx context.Context,
+	instance *keycloakApiAlpha.KeycloakScopeMapping,
+	realmName string,
+	cl keycloak.Client) (string, error) {
+	spec := instance.Spec
+
+	if (spec.Client == "" || spec.FromClient == "") && spec.ClientScope == "" {
+		return "", fmt.Errorf("required fields client or fromClient or clientScope")
+	}
+
+	if spec.Client != "" || spec.FromClient != "" {
+		return syncClientScopeMapping(ctx, instance, realmName, cl)
+	}
+
+	return syncScopeMapping(ctx, instance, realmName, cl)
 }
 
 func (r *Reconcile) updateKeycloakScopeMappingStatus(
 	ctx context.Context,
-	scopeMapping *keycloakApi.KeycloakScopeMapping,
-	oldStatus keycloakApi.KeycloakScopeMappingStatus,
+	scopeMapping *keycloakApiAlpha.KeycloakScopeMapping,
+	oldStatus keycloakApiAlpha.KeycloakScopeMappingStatus,
 ) error {
 	if scopeMapping.Status == oldStatus {
 		return nil
@@ -187,8 +208,8 @@ func (r *Reconcile) updateKeycloakScopeMappingStatus(
 	return nil
 }
 
-func syncClientScopeMapping(ctx context.Context,
-	instance *keycloakApi.KeycloakScopeMapping,
+func syncScopeMapping(ctx context.Context,
+	instance *keycloakApiAlpha.KeycloakScopeMapping,
 	realmName string,
 	cl keycloak.Client,
 ) (string, error) {
@@ -206,7 +227,34 @@ func syncClientScopeMapping(ctx context.Context,
 	return instance.Status.ID, nil
 }
 
-func getAdapterRoles(instance *keycloakApi.KeycloakScopeMapping) []adapter.RealmRole {
+func syncClientScopeMapping(ctx context.Context,
+	instance *keycloakApiAlpha.KeycloakScopeMapping,
+	realmName string,
+	cl keycloak.Client,
+) (string, error) {
+	existingClient, err := cl.GetClient(ctx, realmName, instance.Spec.FromClient)
+	if err != nil {
+		return "", fmt.Errorf("unable to get client: %w", err)
+	}
+
+	fromClientID := gocloak.PString(existingClient.ID)
+
+	if err := cl.SyncRealmClientScopeMapping(
+		ctx, fromClientID, realmName, getAdapterRoles(instance),
+		adapter.ScopeMappingOptions{
+			ClientScope: instance.Spec.ClientScope,
+			Client:      instance.Spec.Client,
+		},
+	); err != nil {
+		return "", fmt.Errorf("failed to SyncRealmClientScopeMapping: %w", err)
+	}
+
+	instance.Status.ID = fromClientID
+
+	return instance.Status.ID, nil
+}
+
+func getAdapterRoles(instance *keycloakApiAlpha.KeycloakScopeMapping) []adapter.RealmRole {
 	adapterRoles := make([]adapter.RealmRole, 0, len(instance.Spec.Roles))
 	for _, roleMapping := range instance.Spec.Roles {
 		adapterRoles = append(adapterRoles, adapter.RealmRole{

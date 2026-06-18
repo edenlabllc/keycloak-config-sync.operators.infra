@@ -8,7 +8,7 @@ metadata:
   name: keycloakrealm-viewer-role
 rules:
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakrealms
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakrealms/status
   verbs:

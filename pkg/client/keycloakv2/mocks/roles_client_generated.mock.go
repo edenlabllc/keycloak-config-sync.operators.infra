@@ -16,8 +16,7 @@ import (
 func NewMockRolesClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockRolesClient {
+}) *MockRolesClient {
 	mock := &MockRolesClient{}
 	mock.Mock.Test(t)
 

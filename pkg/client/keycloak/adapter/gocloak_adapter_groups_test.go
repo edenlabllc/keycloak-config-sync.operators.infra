@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Nerzal/gocloak/v12"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter/mocks"
 )
 
@@ -495,7 +495,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		spec          *keycloakApi.KeycloakRealmGroupSpec
+		spec          *keycloakApiAlpha.Group
 		parentGroupID string
 		client        func(t *testing.T) GoCloak
 		want          string
@@ -503,7 +503,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 	}{
 		{
 			name: "create realm group successfully",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name:      testGroupName,
 				SubGroups: []string{"sub-group1", "sub-group2"},
 			},
@@ -551,7 +551,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "update realm group successfully",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 			},
 			client: func(t *testing.T) GoCloak {
@@ -578,7 +578,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "use old endpoint to get child groups",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name:      testGroupName,
 				SubGroups: []string{"sub-group1"},
 			},
@@ -615,7 +615,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "fail to get group returns error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 			},
 			client: func(t *testing.T) GoCloak {
@@ -631,7 +631,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "fail to create group returns error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 			},
 			client: func(t *testing.T) GoCloak {
@@ -650,7 +650,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "fail to update group returns error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 			},
 			client: func(t *testing.T) GoCloak {
@@ -672,7 +672,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "fail to get role mappings returns error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 			},
 			client: func(t *testing.T) GoCloak {
@@ -697,7 +697,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "group with simple configuration",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: testGroupName,
 				Path: "/test-group",
 			},
@@ -726,7 +726,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		},
 		{
 			name: "unable to sync subgroups error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name:      testGroupName,
 				SubGroups: []string{"failing-subgroup"},
 			},
@@ -778,7 +778,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		{
 			name:          "create child group with parentGroupID successfully",
 			parentGroupID: "parent-group-id",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: "child-group",
 			},
 			client: func(t *testing.T) GoCloak {
@@ -803,7 +803,7 @@ func TestGoCloakAdapter_SyncRealmGroup(t *testing.T) {
 		{
 			name:          "fail to create child group with invalid parent ID",
 			parentGroupID: "invalid-parent-id",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: "child-group",
 			},
 			client: func(t *testing.T) GoCloak {
@@ -1098,13 +1098,13 @@ func TestGoCloakAdapter_DeleteGroup(t *testing.T) {
 func TestGoCloakAdapter_syncGroupRoles_Errors(t *testing.T) {
 	tests := []struct {
 		name       string
-		spec       *keycloakApi.KeycloakRealmGroupSpec
+		spec       *keycloakApiAlpha.Group
 		setupMocks func(t *testing.T) GoCloak
 		wantErrMsg string
 	}{
 		{
 			name: "unable to sync group realm roles error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name:       "test-group",
 				RealmRoles: []string{"admin"},
 			},
@@ -1128,9 +1128,9 @@ func TestGoCloakAdapter_syncGroupRoles_Errors(t *testing.T) {
 		},
 		{
 			name: "unable to sync client roles for group error",
-			spec: &keycloakApi.KeycloakRealmGroupSpec{
+			spec: &keycloakApiAlpha.Group{
 				Name: "test-group",
-				ClientRoles: []keycloakApi.UserClientRole{
+				ClientRoles: []keycloakApiAlpha.UserClientRole{
 					{
 						ClientID: "test-client",
 						Roles:    []string{"client-admin"},

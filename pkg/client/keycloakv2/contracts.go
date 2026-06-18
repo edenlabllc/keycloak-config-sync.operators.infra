@@ -46,6 +46,11 @@ type IdentityProvidersClient interface {
 	GetIdentityProvider(ctx context.Context, realm, alias string) (*IdentityProviderRepresentation, *Response, error)
 	CreateIdentityProvider(ctx context.Context, realm string, idp IdentityProviderRepresentation) (*Response, error)
 	DeleteIdentityProvider(ctx context.Context, realm, alias string) (*Response, error)
+	GetIdentityProviders(
+		ctx context.Context,
+		realm string,
+		params *GetIdentityProvidersParams,
+	) ([]IdentityProviderRepresentation, *Response, error)
 }
 
 type RealmClient interface {

@@ -10,8 +10,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/common"
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	v2mocks "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2/mocks"
 )
@@ -22,13 +21,13 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 
 	tests := []struct {
 		name  string
-		realm *keycloakApi.KeycloakRealm
+		realm *keycloakApiAlpha.KeycloakRealm
 		check func(t *testing.T, got keycloakv2.RealmRepresentation)
 	}{
 		{
 			name: "minimal configuration",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					DisplayName:     "Test Realm",
 					DisplayHTMLName: "<b>Test</b>",
 				},
@@ -44,9 +43,9 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with themes",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
-					Themes: &keycloakApi.RealmThemes{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
+					Themes: &keycloakApiAlpha.RealmThemes{
 						LoginTheme:                  &loginTheme,
 						AccountTheme:                &accountTheme,
 						InternationalizationEnabled: ptr.To(true),
@@ -62,8 +61,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with frontend URL stored in attributes",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					FrontendURL: "https://example.com",
 				},
 			},
@@ -75,8 +74,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with browser security headers",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					BrowserSecurityHeaders: &map[string]string{
 						"X-Frame-Options": "SAMEORIGIN",
 					},
@@ -90,8 +89,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with password policies formatted as string",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					PasswordPolicies: []common.PasswordPolicy{
 						{Type: "length", Value: "8"},
 						{Type: "upperCase", Value: "1"},
@@ -106,8 +105,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with token settings",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					TokenSettings: &common.TokenSettings{
 						DefaultSignatureAlgorithm:           "RS256",
 						RevokeRefreshToken:                  true,
@@ -134,8 +133,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with admin events expiration stored in attributes",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					RealmEventConfig: &common.RealmEventConfig{
 						AdminEventsEnabled:    true,
 						AdminEventsExpiration: 3600,
@@ -150,8 +149,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "admin events expiration not set when admin events disabled",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					RealmEventConfig: &common.RealmEventConfig{
 						AdminEventsEnabled:    false,
 						AdminEventsExpiration: 3600,
@@ -168,9 +167,9 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with login settings",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
-					Login: &keycloakApi.RealmLogin{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
+					Login: &keycloakApiAlpha.RealmLogin{
 						UserRegistration: true,
 						ForgotPassword:   true,
 						RememberMe:       true,
@@ -196,8 +195,8 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 		},
 		{
 			name: "with session settings",
-			realm: &keycloakApi.KeycloakRealm{
-				Spec: keycloakApi.KeycloakRealmSpec{
+			realm: &keycloakApiAlpha.KeycloakRealm{
+				Spec: keycloakApiAlpha.KeycloakRealmSpec{
 					Sessions: &common.RealmSessions{
 						SSOSessionSettings: &common.RealmSSOSessionSettings{
 							IdleTimeout:           1800,
@@ -235,166 +234,6 @@ func TestBuildRealmRepresentationFromV1(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := BuildRealmRepresentationFromV1(tt.realm)
-			tt.check(t, got)
-		})
-	}
-}
-
-func TestBuildRealmRepresentationFromV1Alpha1(t *testing.T) {
-	loginTheme := "custom-login"
-
-	tests := []struct {
-		name  string
-		realm *v1alpha1.ClusterKeycloakRealm
-		check func(t *testing.T, got keycloakv2.RealmRepresentation)
-	}{
-		{
-			name: "minimal configuration",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					DisplayName:     "Test Realm",
-					DisplayHTMLName: "<b>Test</b>",
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, ptr.To("Test Realm"), got.DisplayName)
-				assert.Equal(t, ptr.To("<b>Test</b>"), got.DisplayNameHtml)
-				assert.Nil(t, got.OrganizationsEnabled)
-			},
-		},
-		{
-			name: "with themes",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					Themes: &v1alpha1.ClusterRealmThemes{
-						LoginTheme: &loginTheme,
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, &loginTheme, got.LoginTheme)
-				assert.Nil(t, got.InternationalizationEnabled)
-			},
-		},
-		{
-			name: "with localization separate from themes",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					Localization: &v1alpha1.RealmLocalization{
-						InternationalizationEnabled: ptr.To(true),
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, ptr.To(true), got.InternationalizationEnabled)
-				assert.Nil(t, got.LoginTheme)
-			},
-		},
-		{
-			name: "with frontend URL stored in attributes",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					FrontendURL: "https://example.com",
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				require.NotNil(t, got.Attributes)
-				assert.Equal(t, "https://example.com", (*got.Attributes)["frontendUrl"])
-			},
-		},
-		{
-			name: "with password policies formatted as string",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					PasswordPolicies: []common.PasswordPolicy{
-						{Type: "length", Value: "8"},
-						{Type: "digits", Value: "1"},
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				require.NotNil(t, got.PasswordPolicy)
-				assert.Equal(t, "length(8) and digits(1)", *got.PasswordPolicy)
-			},
-		},
-		{
-			name: "with token settings",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					TokenSettings: &common.TokenSettings{
-						DefaultSignatureAlgorithm: "ES256",
-						AccessTokenLifespan:       600,
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, ptr.To("ES256"), got.DefaultSignatureAlgorithm)
-				assert.Equal(t, ptr.To(int32(600)), got.AccessTokenLifespan)
-			},
-		},
-		{
-			name: "with admin events expiration stored in attributes",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					RealmEventConfig: &common.RealmEventConfig{
-						AdminEventsEnabled:    true,
-						AdminEventsExpiration: 7200,
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				require.NotNil(t, got.Attributes)
-				assert.Equal(t, "7200", (*got.Attributes)["adminEventsExpiration"])
-			},
-		},
-		{
-			name: "with login settings",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					Login: &keycloakApi.RealmLogin{
-						UserRegistration: true,
-						RememberMe:       true,
-						EditUsername:     false,
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, ptr.To(true), got.RegistrationAllowed)
-				assert.Equal(t, ptr.To(true), got.RememberMe)
-				assert.Equal(t, ptr.To(false), got.EditUsernameAllowed)
-			},
-		},
-		{
-			name: "with session settings",
-			realm: &v1alpha1.ClusterKeycloakRealm{
-				Spec: v1alpha1.ClusterKeycloakRealmSpec{
-					Sessions: &common.RealmSessions{
-						SSOSessionSettings: &common.RealmSSOSessionSettings{
-							IdleTimeout: 900,
-							MaxLifespan: 18000,
-						},
-					},
-				},
-			},
-			check: func(t *testing.T, got keycloakv2.RealmRepresentation) {
-				t.Helper()
-				assert.Equal(t, ptr.To(int32(900)), got.SsoSessionIdleTimeout)
-				assert.Equal(t, ptr.To(int32(18000)), got.SsoSessionMaxLifespan)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := BuildRealmRepresentationFromV1Alpha1(tt.realm)
 			tt.check(t, got)
 		})
 	}

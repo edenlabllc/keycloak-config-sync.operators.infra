@@ -16,8 +16,7 @@ import (
 func NewMockUsersClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockUsersClient {
+}) *MockUsersClient {
 	mock := &MockUsersClient{}
 	mock.Mock.Test(t)
 

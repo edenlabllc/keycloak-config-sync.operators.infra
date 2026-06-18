@@ -8,7 +8,7 @@ metadata:
   name: keycloakauthflow-viewer-role
 rules:
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakauthflows
   verbs:
@@ -16,7 +16,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - v1.edp.edenlab.io
+  - config.idp.edenlab.io
   resources:
   - keycloakauthflows/status
   verbs:

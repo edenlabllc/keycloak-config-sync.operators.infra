@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -13,12 +13,12 @@ var keycloakclientlog = logf.Log.WithName("keycloakclient-resource")
 
 // SetupKeycloakClientWebhookWithManager registers the webhook for KeycloakClient in the manager.
 func SetupKeycloakClientWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &keycloakApi.KeycloakClient{}).
+	return ctrl.NewWebhookManagedBy(mgr, &keycloakApiAlpha.KeycloakClient{}).
 		WithDefaulter(&KeycloakClientCustomDefaulter{}).
 		Complete()
 }
 
-// +kubebuilder:webhook:path=/mutate-v1-edp-edenlab-io-v1-keycloakclient,mutating=true,failurePolicy=fail,sideEffects=None,groups=v1.edp.edenlab.io,resources=keycloakclients,verbs=create;update,versions=v1,name=mkeycloakclient-v1.kb.io,admissionReviewVersions=v1
+// +kubebuilder:webhook:path=/mutate-config-idp-edenlab-io-v1alpha1-keycloakclient,mutating=true,failurePolicy=fail,sideEffects=None,groups=config.idp.edenlab.io,resources=keycloakclients,verbs=create;update,versions=v1alpha1,name=mkeycloakclient-v1.kb.io,admissionReviewVersions=v1
 
 // KeycloakClientCustomDefaulter struct is responsible for setting default values on the custom resource of the
 // Kind KeycloakClient when those are created or updated.
@@ -27,13 +27,16 @@ type KeycloakClientCustomDefaulter struct {
 }
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind KeycloakClient.
-func (d *KeycloakClientCustomDefaulter) Default(_ context.Context, obj *keycloakApi.KeycloakClient) error {
+func (d *KeycloakClientCustomDefaulter) Default(_ context.Context, obj *keycloakApiAlpha.KeycloakClient) error {
 	keycloakclientlog.Info("Defaulting for KeycloakClient", "name", obj.GetName())
 
-	updated := d.applyDefaults(obj)
+	for i, client := range obj.Spec.Client {
+		updated := d.applyDefaults(obj.GetName(), &obj.Spec.Client[i])
 
-	if updated {
-		keycloakclientlog.Info("Applied defaults to KeycloakClient", "name", obj.GetName())
+		if updated {
+			keycloakclientlog.Info("Applied defaults to KeycloakClient",
+				"name", obj.GetName(), "clientID", client.ClientId)
+		}
 	}
 
 	return nil
@@ -45,33 +48,33 @@ const (
 )
 
 // applyDefaults applies default values to KeycloakClient.
-func (r *KeycloakClientCustomDefaulter) applyDefaults(keycloakClient *keycloakApi.KeycloakClient) bool {
-	if keycloakClient.Spec.Attributes == nil {
-		keycloakClient.Spec.Attributes = make(map[string]string)
+func (r *KeycloakClientCustomDefaulter) applyDefaults(objName string, keycloakClient *keycloakApiAlpha.Client) bool {
+	if keycloakClient.Attributes == nil {
+		keycloakClient.Attributes = make(map[string]string)
 	}
 
 	updated := false
 
-	if _, ok := keycloakClient.Spec.Attributes[ClientAttributeLogoutRedirectUris]; !ok {
+	if _, ok := keycloakClient.Attributes[ClientAttributeLogoutRedirectUris]; !ok {
 		// set default value for logout redirect uris to "+" is required for correct logout from keycloak
-		keycloakClient.Spec.Attributes[ClientAttributeLogoutRedirectUris] = ClientAttributeLogoutRedirectUrisDefValue
+		keycloakClient.Attributes[ClientAttributeLogoutRedirectUris] = ClientAttributeLogoutRedirectUrisDefValue
 		updated = true
 	}
 
-	if keycloakClient.Spec.WebOrigins == nil && keycloakClient.Spec.WebUrl != "" {
-		keycloakClient.Spec.WebOrigins = []string{
-			keycloakClient.Spec.WebUrl,
+	if keycloakClient.WebOrigins == nil && keycloakClient.WebUrl != "" {
+		keycloakClient.WebOrigins = []string{
+			keycloakClient.WebUrl,
 		}
 
 		updated = true
 	}
 
-	if migrated := r.migrateClientRoles(keycloakClient); migrated {
+	if migrated := r.migrateClientRoles(objName, keycloakClient); migrated {
 		updated = true
 	}
 
-	if keycloakClient.Spec.ServiceAccount != nil {
-		if migrated := r.migrateServiceAccountAttributes(keycloakClient); migrated {
+	if keycloakClient.ServiceAccount != nil {
+		if migrated := r.migrateServiceAccountAttributes(objName, keycloakClient); migrated {
 			updated = true
 		}
 	}
@@ -82,19 +85,20 @@ func (r *KeycloakClientCustomDefaulter) applyDefaults(keycloakClient *keycloakAp
 // migrateClientRoles migrates ClientRoles to ClientRolesV2 format.
 // This function converts the old string-based client roles to the new ClientRole struct format.
 // It only performs migration if ClientRolesV2 is empty and ClientRoles is not empty.
-func (r *KeycloakClientCustomDefaulter) migrateClientRoles(keycloakClient *keycloakApi.KeycloakClient) bool {
-	if len(keycloakClient.Spec.ClientRolesV2) == 0 && len(keycloakClient.Spec.ClientRoles) > 0 {
+func (r *KeycloakClientCustomDefaulter) migrateClientRoles(objName string, keycloakClient *keycloakApiAlpha.Client) bool {
+	if len(keycloakClient.ClientRolesV2) == 0 && len(keycloakClient.ClientRoles) > 0 {
 		keycloakclientlog.Info("Migrating ClientRoles to ClientRolesV2",
-			"name", keycloakClient.GetName(),
-			"roleCount", len(keycloakClient.Spec.ClientRoles))
+			"name", objName,
+			"clientID", keycloakClient.ClientId,
+			"roleCount", len(keycloakClient.ClientRoles))
 
 		// Convert string-based roles to ClientRole structs
-		for _, roleName := range keycloakClient.Spec.ClientRoles {
-			clientRole := keycloakApi.ClientRole{
+		for _, roleName := range keycloakClient.ClientRoles {
+			clientRole := keycloakApiAlpha.ClientRole{
 				Name: roleName,
 				// Composite field is left empty as it wasn't available in the old format
 			}
-			keycloakClient.Spec.ClientRolesV2 = append(keycloakClient.Spec.ClientRolesV2, clientRole)
+			keycloakClient.ClientRolesV2 = append(keycloakClient.ClientRolesV2, clientRole)
 		}
 
 		// Keep the original ClientRoles field for backward compatibility
@@ -109,17 +113,18 @@ func (r *KeycloakClientCustomDefaulter) migrateClientRoles(keycloakClient *keycl
 // migrateServiceAccountAttributes migrates Attributes to AttributesV2 format.
 // This function converts the old string-based attributes to the new []string format.
 // It only performs migration if AttributesV2 is empty and Attributes is not empty.
-func (r *KeycloakClientCustomDefaulter) migrateServiceAccountAttributes(keycloakClient *keycloakApi.KeycloakClient) bool {
-	if len(keycloakClient.Spec.ServiceAccount.AttributesV2) == 0 && len(keycloakClient.Spec.ServiceAccount.Attributes) > 0 {
+func (r *KeycloakClientCustomDefaulter) migrateServiceAccountAttributes(objName string, keycloakClient *keycloakApiAlpha.Client) bool {
+	if len(keycloakClient.ServiceAccount.AttributesV2) == 0 && len(keycloakClient.ServiceAccount.Attributes) > 0 {
 		keycloakclientlog.Info("Migrating ServiceAccount.Attributes to AttributesV2",
-			"name", keycloakClient.GetName(),
-			"attributeCount", len(keycloakClient.Spec.ServiceAccount.Attributes))
+			"name", objName,
+			"clientID", keycloakClient.ClientId,
+			"attributeCount", len(keycloakClient.ServiceAccount.Attributes))
 
-		keycloakClient.Spec.ServiceAccount.AttributesV2 = make(map[string][]string, len(keycloakClient.Spec.ServiceAccount.Attributes))
+		keycloakClient.ServiceAccount.AttributesV2 = make(map[string][]string, len(keycloakClient.ServiceAccount.Attributes))
 
 		// Convert string bases attributes to []string
-		for attr, value := range keycloakClient.Spec.ServiceAccount.Attributes {
-			keycloakClient.Spec.ServiceAccount.AttributesV2[attr] = []string{value}
+		for attr, value := range keycloakClient.ServiceAccount.Attributes {
+			keycloakClient.ServiceAccount.AttributesV2[attr] = []string{value}
 		}
 
 		// Keep the original Attributes field for backward compatibility

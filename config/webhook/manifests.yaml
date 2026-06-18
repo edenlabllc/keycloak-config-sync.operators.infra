@@ -10,14 +10,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-v1-edp-edenlab-io-v1-keycloakclient
+      path: /mutate-config-idp-edenlab-io-v1alpha1-keycloakclient
   failurePolicy: Fail
   name: mkeycloakclient-v1.kb.io
   rules:
   - apiGroups:
-    - v1.edp.edenlab.io
+    - config.idp.edenlab.io
     apiVersions:
-    - v1
+    - v1alpha1
     operations:
     - CREATE
     - UPDATE
@@ -36,14 +36,14 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-v1-edp-epam-com-v1-keycloakrealm
+      path: /validate-config-idp-edenlab-io-v1alpha1-keycloakrealm
   failurePolicy: Fail
   name: vkeycloakrealm-v1.kb.io
   rules:
   - apiGroups:
-    - v1.edp.epam.com
+    - config.idp.edenlab.io
     apiVersions:
-    - v1
+    - v1alpha1
     operations:
     - CREATE
     resources:

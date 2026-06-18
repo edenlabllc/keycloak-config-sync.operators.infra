@@ -16,8 +16,7 @@ import (
 func NewMockIdentityProvidersClient(t interface {
 	mock.TestingT
 	Cleanup(func())
-},
-) *MockIdentityProvidersClient {
+}) *MockIdentityProvidersClient {
 	mock := &MockIdentityProvidersClient{}
 	mock.Mock.Test(t)
 
@@ -265,6 +264,88 @@ func (_c *MockIdentityProvidersClient_GetIdentityProvider_Call) Return(v *keyclo
 }
 
 func (_c *MockIdentityProvidersClient_GetIdentityProvider_Call) RunAndReturn(run func(ctx context.Context, realm string, alias string) (*keycloakv2.IdentityProviderRepresentation, *keycloakv2.Response, error)) *MockIdentityProvidersClient_GetIdentityProvider_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetIdentityProviders provides a mock function for the type MockIdentityProvidersClient
+func (_mock *MockIdentityProvidersClient) GetIdentityProviders(ctx context.Context, realm string, params *keycloakv2.GetIdentityProvidersParams) ([]keycloakv2.IdentityProviderRepresentation, *keycloakv2.Response, error) {
+	ret := _mock.Called(ctx, realm, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIdentityProviders")
+	}
+
+	var r0 []keycloakv2.IdentityProviderRepresentation
+	var r1 *keycloakv2.Response
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *keycloakv2.GetIdentityProvidersParams) ([]keycloakv2.IdentityProviderRepresentation, *keycloakv2.Response, error)); ok {
+		return returnFunc(ctx, realm, params)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *keycloakv2.GetIdentityProvidersParams) []keycloakv2.IdentityProviderRepresentation); ok {
+		r0 = returnFunc(ctx, realm, params)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]keycloakv2.IdentityProviderRepresentation)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, *keycloakv2.GetIdentityProvidersParams) *keycloakv2.Response); ok {
+		r1 = returnFunc(ctx, realm, params)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*keycloakv2.Response)
+		}
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, string, *keycloakv2.GetIdentityProvidersParams) error); ok {
+		r2 = returnFunc(ctx, realm, params)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockIdentityProvidersClient_GetIdentityProviders_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetIdentityProviders'
+type MockIdentityProvidersClient_GetIdentityProviders_Call struct {
+	*mock.Call
+}
+
+// GetIdentityProviders is a helper method to define mock.On call
+//   - ctx context.Context
+//   - realm string
+//   - params *keycloakv2.GetIdentityProvidersParams
+func (_e *MockIdentityProvidersClient_Expecter) GetIdentityProviders(ctx interface{}, realm interface{}, params interface{}) *MockIdentityProvidersClient_GetIdentityProviders_Call {
+	return &MockIdentityProvidersClient_GetIdentityProviders_Call{Call: _e.mock.On("GetIdentityProviders", ctx, realm, params)}
+}
+
+func (_c *MockIdentityProvidersClient_GetIdentityProviders_Call) Run(run func(ctx context.Context, realm string, params *keycloakv2.GetIdentityProvidersParams)) *MockIdentityProvidersClient_GetIdentityProviders_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 *keycloakv2.GetIdentityProvidersParams
+		if args[2] != nil {
+			arg2 = args[2].(*keycloakv2.GetIdentityProvidersParams)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIdentityProvidersClient_GetIdentityProviders_Call) Return(vs []keycloakv2.IdentityProviderRepresentation, response *keycloakv2.Response, err error) *MockIdentityProvidersClient_GetIdentityProviders_Call {
+	_c.Call.Return(vs, response, err)
+	return _c
+}
+
+func (_c *MockIdentityProvidersClient_GetIdentityProviders_Call) RunAndReturn(run func(ctx context.Context, realm string, params *keycloakv2.GetIdentityProvidersParams) ([]keycloakv2.IdentityProviderRepresentation, *keycloakv2.Response, error)) *MockIdentityProvidersClient_GetIdentityProviders_Call {
 	_c.Call.Return(run)
 	return _c
 }

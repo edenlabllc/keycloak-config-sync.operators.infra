@@ -6,13 +6,13 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1"
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 )
 
 // AuthFlowHandler is a single step in the KeycloakAuthFlow reconciliation chain.
 type AuthFlowHandler interface {
-	Serve(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error
+	Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error
 }
 
 // Chain sequentially executes a list of AuthFlowHandlers.
@@ -24,7 +24,7 @@ func (ch *Chain) Use(handlers ...AuthFlowHandler) {
 	ch.handlers = append(ch.handlers, handlers...)
 }
 
-func (ch *Chain) Serve(ctx context.Context, flow *keycloakApi.KeycloakAuthFlow, realmName string) error {
+func (ch *Chain) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	log.Info("Starting KeycloakAuthFlow chain")

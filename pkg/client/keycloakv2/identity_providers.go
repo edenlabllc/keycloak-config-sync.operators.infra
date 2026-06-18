@@ -6,7 +6,10 @@ import (
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2/generated"
 )
 
-type IdentityProviderRepresentation = generated.IdentityProviderRepresentation
+type (
+	IdentityProviderRepresentation = generated.IdentityProviderRepresentation
+	GetIdentityProvidersParams     = generated.GetAdminRealmsRealmIdentityProviderInstancesParams
+)
 
 type identityProvidersClient struct {
 	client generated.ClientWithResponsesInterface
@@ -79,4 +82,31 @@ func (c *identityProvidersClient) DeleteIdentityProvider(
 	}
 
 	return response, nil
+}
+
+func (c *identityProvidersClient) GetIdentityProviders(
+	ctx context.Context,
+	realm string,
+	params *GetIdentityProvidersParams,
+) ([]IdentityProviderRepresentation, *Response, error) {
+	res, err := c.client.GetAdminRealmsRealmIdentityProviderInstancesWithResponse(ctx, realm, params)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if res == nil {
+		return nil, nil, ErrNilResponse
+	}
+
+	response := &Response{HTTPResponse: res.HTTPResponse, Body: res.Body}
+
+	if err := checkResponseError(res.HTTPResponse, res.Body); err != nil {
+		return nil, response, err
+	}
+
+	if res.JSON200 == nil {
+		return nil, response, nil
+	}
+
+	return *res.JSON200, response, nil
 }

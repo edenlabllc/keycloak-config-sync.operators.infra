@@ -1,0 +1,267 @@
+package group
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"k8s.io/utils/ptr"
+
+	keycloakApiAlpha "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2/mocks"
+)
+
+const (
+	testGroupName      = "test-group"
+	testChildGroupName = "child-group"
+	testUpdatedPath    = "/updated-path"
+)
+
+func TestCreateOrUpdateGroup_Serve_CreateTopLevel(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testGroupName
+	group.Path = "/test-group"
+	group.Attributes = map[string][]string{"key": {"val"}}
+
+	mockGroups.EXPECT().FindGroupByName(
+		context.Background(), "test-realm", testGroupName,
+	).Return(nil, nil, keycloakv2.ErrNotFound)
+
+	mockGroups.EXPECT().CreateGroup(
+		context.Background(), "test-realm",
+		keycloakv2.GroupRepresentation{
+			Name:        ptr.To(testGroupName),
+			Description: ptr.To(""),
+			Path:        ptr.To("/test-group"),
+			Attributes:  &map[string][]string{"key": {"val"}},
+		},
+	).Return(&keycloakv2.Response{
+		HTTPResponse: &http.Response{
+			Header: http.Header{"Location": []string{"http://localhost/admin/realms/test-realm/groups/group-id-123"}},
+		},
+	}, nil)
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	require.NoError(t, err)
+	assert.Equal(t, "group-id-123", groupCtx.GroupID)
+}
+
+func TestCreateOrUpdateGroup_Serve_CreateChildGroup(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm", ParentGroupID: "parent-id"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testChildGroupName
+	group.Description = "Child group description"
+	group.Path = "/child-group"
+	group.Attributes = map[string][]string{"a": {"b"}}
+
+	mockGroups.EXPECT().FindChildGroupByName(
+		context.Background(), "test-realm", "parent-id", testChildGroupName,
+	).Return(nil, nil, keycloakv2.ErrNotFound)
+
+	mockGroups.EXPECT().CreateChildGroup(
+		context.Background(), "test-realm", "parent-id",
+		keycloakv2.GroupRepresentation{
+			Name:        ptr.To(testChildGroupName),
+			Description: ptr.To("Child group description"),
+			Path:        ptr.To("/child-group"),
+			Attributes:  &map[string][]string{"a": {"b"}},
+		},
+	).Return(&keycloakv2.Response{
+		HTTPResponse: &http.Response{
+			Header: http.Header{"Location": []string{"http://localhost/admin/realms/test-realm/groups/child-id-456"}},
+		},
+	}, nil)
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	require.NoError(t, err)
+	assert.Equal(t, "child-id-456", groupCtx.GroupID)
+}
+
+func TestCreateOrUpdateGroup_Serve_UpdateExisting(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = "existing-group"
+	group.Description = "Updated description"
+	group.Path = testUpdatedPath
+	group.Attributes = map[string][]string{"new-key": {"new-val"}}
+
+	mockGroups.EXPECT().FindGroupByName(
+		context.Background(), "test-realm", "existing-group",
+	).Return(&keycloakv2.GroupRepresentation{
+		Id:   ptr.To("existing-id"),
+		Name: ptr.To("existing-group"),
+		Path: ptr.To("/old-path"),
+	}, nil, nil)
+
+	mockGroups.EXPECT().UpdateGroup(
+		context.Background(), "test-realm", "existing-id",
+		keycloakv2.GroupRepresentation{
+			Id:          ptr.To("existing-id"),
+			Name:        ptr.To("existing-group"),
+			Description: ptr.To("Updated description"),
+			Path:        ptr.To(testUpdatedPath),
+			Attributes:  &map[string][]string{"new-key": {"new-val"}},
+		},
+	).Return(nil, nil)
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	require.NoError(t, err)
+	assert.Equal(t, "existing-id", groupCtx.GroupID)
+}
+
+func TestCreateOrUpdateGroup_Serve_FindGroupError(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testGroupName
+
+	mockGroups.EXPECT().FindGroupByName(
+		context.Background(), "test-realm", testGroupName,
+	).Return(nil, nil, errors.New("api error"))
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	assert.ErrorContains(t, err, "unable to search for group")
+}
+
+func TestCreateOrUpdateGroup_Serve_CreateGroupError(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testGroupName
+	group.Path = "/test-group"
+	group.Attributes = map[string][]string{"key": {"val"}}
+
+	mockGroups.EXPECT().FindGroupByName(
+		context.Background(), "test-realm", testGroupName,
+	).Return(nil, nil, keycloakv2.ErrNotFound)
+
+	mockGroups.EXPECT().CreateGroup(
+		context.Background(), "test-realm",
+		keycloakv2.GroupRepresentation{
+			Name:        ptr.To(testGroupName),
+			Description: ptr.To(""),
+			Path:        ptr.To("/test-group"),
+			Attributes:  &map[string][]string{"key": {"val"}},
+		},
+	).Return(nil, errors.New("create failed"))
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	assert.ErrorContains(t, err, "unable to create group")
+}
+
+func TestCreateOrUpdateGroup_Serve_UpdateGroupError(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = "existing-group"
+	group.Path = testUpdatedPath
+	group.Attributes = map[string][]string{"key": {"val"}}
+
+	mockGroups.EXPECT().FindGroupByName(
+		context.Background(), "test-realm", "existing-group",
+	).Return(&keycloakv2.GroupRepresentation{
+		Id:   ptr.To("existing-id"),
+		Name: ptr.To("existing-group"),
+		Path: ptr.To("/old-path"),
+	}, nil, nil)
+
+	mockGroups.EXPECT().UpdateGroup(
+		context.Background(), "test-realm", "existing-id",
+		keycloakv2.GroupRepresentation{
+			Id:          ptr.To("existing-id"),
+			Name:        ptr.To("existing-group"),
+			Description: ptr.To(""),
+			Path:        ptr.To(testUpdatedPath),
+			Attributes:  &map[string][]string{"key": {"val"}},
+		},
+	).Return(nil, errors.New("update failed"))
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	assert.ErrorContains(t, err, "unable to update group")
+}
+
+func TestCreateOrUpdateGroup_Serve_UpdateExistingChildGroup(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm", ParentGroupID: "parent-id"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testChildGroupName
+	group.Path = testUpdatedPath
+	group.Attributes = map[string][]string{"k": {"v"}}
+
+	mockGroups.EXPECT().FindChildGroupByName(
+		context.Background(), "test-realm", "parent-id", testChildGroupName,
+	).Return(&keycloakv2.GroupRepresentation{
+		Id:   ptr.To("child-id"),
+		Name: ptr.To(testChildGroupName),
+		Path: ptr.To("/old-path"),
+	}, nil, nil)
+
+	mockGroups.EXPECT().UpdateGroup(
+		context.Background(), "test-realm", "child-id",
+		keycloakv2.GroupRepresentation{
+			Id:          ptr.To("child-id"),
+			Name:        ptr.To(testChildGroupName),
+			Description: ptr.To(""),
+			Path:        ptr.To(testUpdatedPath),
+			Attributes:  &map[string][]string{"k": {"v"}},
+		},
+	).Return(nil, nil)
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	require.NoError(t, err)
+	assert.Equal(t, "child-id", groupCtx.GroupID)
+}
+
+func TestCreateOrUpdateGroup_Serve_FindChildGroupError(t *testing.T) {
+	mockGroups := mocks.NewMockGroupsClient(t)
+
+	kClient := &keycloakv2.KeycloakClient{Groups: mockGroups}
+	groupCtx := &GroupContext{RealmName: "test-realm", ParentGroupID: "parent-id"}
+
+	group := &keycloakApiAlpha.Group{}
+	group.Name = testChildGroupName
+
+	mockGroups.EXPECT().FindChildGroupByName(
+		context.Background(), "test-realm", "parent-id", testChildGroupName,
+	).Return(nil, nil, errors.New("api error"))
+
+	h := NewCreateOrUpdateGroup()
+	err := h.Serve(context.Background(), group, kClient, groupCtx)
+	assert.ErrorContains(t, err, "unable to search for group")
+}
