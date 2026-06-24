@@ -1,0 +1,74 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakrealms
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: manager-role
+  namespace: keycloak
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakauthflows
+  - keycloakclients
+  - keycloakcomponents
+  - keycloakrealms
+  - keycloakscopemappings
+  - keycloakusers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakauthflows/finalizers
+  - keycloakclients/finalizers
+  - keycloakcomponents/finalizers
+  - keycloakrealms/finalizers
+  - keycloakscopemappings/finalizers
+  - keycloakusers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakauthflows/status
+  - keycloakclients/status
+  - keycloakcomponents/status
+  - keycloakrealms/status
+  - keycloakscopemappings/status
+  - keycloakusers/status
+  verbs:
+  - get
+  - patch
+  - update

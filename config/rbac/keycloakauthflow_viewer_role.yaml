@@ -1,0 +1,23 @@
+# permissions for end users to view keycloakauthflows.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: keycloak-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: keycloakauthflow-viewer-role
+rules:
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakauthflows
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakauthflows/status
+  verbs:
+  - get
