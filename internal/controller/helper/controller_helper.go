@@ -227,6 +227,15 @@ func (h *Helper) GetKeycloakRealmFromRef(ctx context.Context, object ObjectWithR
 	kind := object.GetRealmRef().Kind
 	name := object.GetRealmRef().Name
 
+	if !h.enableOwnerRef {
+		kcRealm, err := kcClient.GetRealm(ctx, name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get realm: [%s] %w", name, err)
+		}
+
+		return kcRealm, nil
+	}
+
 	switch kind {
 	case keycloakApiAlpha.KeycloakRealmKind:
 		realm := &keycloakApiAlpha.KeycloakRealm{}
@@ -254,6 +263,10 @@ func (h *Helper) GetKeycloakRealmFromRef(ctx context.Context, object ObjectWithR
 func (h *Helper) GetRealmNameFromRef(ctx context.Context, object ObjectWithRealmRef) (string, error) {
 	kind := object.GetRealmRef().Kind
 	name := object.GetRealmRef().Name
+
+	if !h.enableOwnerRef {
+		return name, nil
+	}
 
 	switch kind {
 	case keycloakApiAlpha.KeycloakRealmKind:
