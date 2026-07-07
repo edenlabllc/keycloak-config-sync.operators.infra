@@ -1,0 +1,23 @@
+# permissions for end users to view keycloakscopemapping.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: keycloak-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: keycloakscopemapping-viewer-role
+rules:
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakscopemappings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakscopemappings/status
+  verbs:
+  - get

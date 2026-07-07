@@ -1,0 +1,27 @@
+# permissions for end users to edit keycloakcomponents.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: keycloak-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: keycloakcomponent-editor-role
+rules:
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakcomponents
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.idp.edenlab.io
+  resources:
+  - keycloakcomponents/status
+  verbs:
+  - get

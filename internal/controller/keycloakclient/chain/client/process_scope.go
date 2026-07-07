@@ -1,0 +1,128 @@
+package client
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/Nerzal/gocloak/v12"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient/chain"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter"
+)
+
+const scopeLogKey = "scope"
+
+type ProcessScope struct {
+	keycloakApiClient keycloak.Client
+	k8sClient         client.Client
+}
+
+func NewProcessScope(keycloakApiClient keycloak.Client, k8sClient client.Client) *ProcessScope {
+	return &ProcessScope{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
+}
+
+func (h *ProcessScope) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
+	log := ctrl.LoggerFrom(ctx)
+
+	if keycloakClient.Client.Authorization == nil {
+		log.Info("Authorization settings are not specified")
+		return nil
+	}
+
+	clientID, err := h.keycloakApiClient.GetClientID(keycloakClient.Client.ClientId, realmName)
+	if err != nil {
+		h.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync authorization scopes: %s", err.Error()))
+
+		return fmt.Errorf("failed to get client id: %w", err)
+	}
+
+	existingScopes, err := h.keycloakApiClient.GetScopes(ctx, realmName, clientID)
+	if err != nil {
+		h.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync authorization scopes: %s", err.Error()))
+
+		return fmt.Errorf("failed to get scopes: %w", err)
+	}
+
+	for _, scope := range keycloakClient.Client.Authorization.Scopes {
+		log.Info("Processing scope", scopeLogKey, scope)
+
+		_, ok := existingScopes[scope]
+		if ok {
+			log.Info("Scope already exists")
+			delete(existingScopes, scope)
+
+			continue
+		}
+
+		if _, err = h.keycloakApiClient.CreateScope(ctx, realmName, clientID, scope); err != nil {
+			h.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync authorization scopes: %s", err.Error()))
+
+			return fmt.Errorf("failed to create scope: %w", err)
+		}
+
+		log.Info("Scope created", scopeLogKey, scope)
+
+		delete(existingScopes, scope)
+	}
+
+	if keycloakClient.Client.ReconciliationStrategy != keycloakApi.ReconciliationStrategyAddOnly {
+		if err = h.deleteScopes(ctx, existingScopes, realmName, clientID); err != nil {
+			h.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync authorization scopes: %s", err.Error()))
+
+			return err
+		}
+	}
+
+	h.setSuccessCondition(ctx, keycloakClient, "Authorization scopes synchronized")
+
+	return nil
+}
+
+func (h *ProcessScope) setFailureCondition(ctx context.Context, keycloakClient *DataClient, message string) {
+	log := ctrl.LoggerFrom(ctx)
+
+	if err := SetCondition(
+		ctx, h.k8sClient, keycloakClient,
+		chain.ConditionAuthorizationScopesSynced,
+		metav1.ConditionFalse,
+		chain.ReasonKeycloakAPIError,
+		message,
+	); err != nil {
+		log.Error(err, "Failed to set failure condition")
+	}
+}
+
+func (h *ProcessScope) setSuccessCondition(ctx context.Context, keycloakClient *DataClient, message string) {
+	log := ctrl.LoggerFrom(ctx)
+
+	if err := SetCondition(
+		ctx, h.k8sClient, keycloakClient,
+		chain.ConditionAuthorizationScopesSynced,
+		metav1.ConditionTrue,
+		chain.ReasonAuthorizationScopesSynced,
+		message,
+	); err != nil {
+		log.Error(err, "Failed to set success condition")
+	}
+}
+
+func (h *ProcessScope) deleteScopes(ctx context.Context, existingScopes map[string]gocloak.ScopeRepresentation, realmName string, clientID string) error {
+	log := ctrl.LoggerFrom(ctx)
+
+	for name := range existingScopes {
+		if err := h.keycloakApiClient.DeleteScope(ctx, realmName, clientID, *existingScopes[name].ID); err != nil {
+			if !adapter.IsErrNotFound(err) {
+				return fmt.Errorf("failed to delete scope: %w", err)
+			}
+		}
+
+		log.Info("Scope deleted", scopeLogKey, name)
+	}
+
+	return nil
+}
