@@ -273,7 +273,7 @@ func main() {
 	}
 
 	// nolint:goconst
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	if enableWebhook() {
 		// Setup k8s client without cache to enable reading from non-default namespaces.
 		k8sClient, err := client.New(cfg, client.Options{Scheme: scheme})
 		if err != nil {
@@ -365,6 +365,21 @@ func enableOwnerRef() bool {
 	b, err := strconv.ParseBool(val)
 	if err != nil {
 		setupLog.Error(err, "unable to parse ENABLE_OWNER_REF. Using default value false")
+		return false
+	}
+
+	return b
+}
+
+func enableWebhook() bool {
+	val, exists := os.LookupEnv("ENABLE_WEBHOOKS")
+	if !exists {
+		return false
+	}
+
+	b, err := strconv.ParseBool(val)
+	if err != nil {
+		setupLog.Error(err, "unable to parse ENABLE_WEBHOOKS. Using default value false")
 		return false
 	}
 
