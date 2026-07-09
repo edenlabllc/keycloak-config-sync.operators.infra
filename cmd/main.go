@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakauthflow"
@@ -51,7 +50,6 @@ var (
 const (
 	keycloakOperatorLock    = "idp-keycloak-operator-lock"
 	successReconcileTimeout = "SUCCESS_RECONCILE_TIMEOUT"
-	operatorNamespaceEnv    = "OPERATOR_NAMESPACE"
 )
 
 func init() {
@@ -223,13 +221,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	operatorNamespace, err := getOperatorNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to get operator namespace")
-		os.Exit(1)
-	}
-
-	h := helper.MakeHelper(mgr.GetClient(), mgr.GetScheme(), operatorNamespace, helper.EnableOwnerRef(enableOwnerRef()))
+	h := helper.MakeHelper(mgr.GetClient(), mgr.GetScheme(), ns, helper.EnableOwnerRef(enableOwnerRef()))
 
 	keycloakClientCtrl := keycloakclient.NewReconcileKeycloakClient(mgr.GetClient(), h)
 	if err = keycloakClientCtrl.SetupWithManager(mgr, successReconcileTimeoutValue); err != nil {
@@ -341,19 +333,6 @@ func getSuccessReconcileTimeout() (time.Duration, error) {
 	}
 
 	return d, nil
-}
-
-func getOperatorNamespace() (string, error) {
-	ns, exists := os.LookupEnv(operatorNamespaceEnv)
-	if !exists {
-		return "", fmt.Errorf("environment variable %s is not set", operatorNamespaceEnv)
-	}
-
-	if ns = strings.TrimSpace(ns); ns == "" {
-		return "", fmt.Errorf("environment variable %s is empty", operatorNamespaceEnv)
-	}
-
-	return ns, nil
 }
 
 func enableOwnerRef() bool {
