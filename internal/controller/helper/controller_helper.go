@@ -76,24 +76,24 @@ type ControllerHelper interface {
 }
 
 type Helper struct {
-	client            client.Client
-	scheme            *runtime.Scheme
-	restyClient       *resty.Client
-	adapterBuilder    adapterBuilder
-	tokenSecretLock   *sync.Mutex
-	operatorNamespace string
+	client          client.Client
+	scheme          *runtime.Scheme
+	restyClient     *resty.Client
+	adapterBuilder  adapterBuilder
+	tokenSecretLock *sync.Mutex
+	watchNamespace  string
 	// enableOwnerRef is a flag to enable legacy owner reference to Keycloak and KeycloakRealm for operator objects.
 	// This is needed for backward compatibility with the old version of the operator.
 	enableOwnerRef bool
 }
 
-func MakeHelper(k8sClient client.Client, scheme *runtime.Scheme, operatorNamespace string, options ...func(*Helper)) *Helper {
+func MakeHelper(k8sClient client.Client, scheme *runtime.Scheme, watchNamespace string, options ...func(*Helper)) *Helper {
 	helper := &Helper{
-		tokenSecretLock:   new(sync.Mutex),
-		client:            k8sClient,
-		scheme:            scheme,
-		operatorNamespace: operatorNamespace,
-		enableOwnerRef:    false,
+		tokenSecretLock: new(sync.Mutex),
+		client:          k8sClient,
+		scheme:          scheme,
+		watchNamespace:  watchNamespace,
+		enableOwnerRef:  false,
 		adapterBuilder: func(
 			ctx context.Context,
 			conf adapter.GoCloakConfig,
