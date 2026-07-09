@@ -240,7 +240,7 @@ func (h *Helper) saveKeycloakClientTokenSecret(ctx context.Context, secretName, 
 }
 
 func (h *Helper) getKeycloakAuthDataFromConfigRef(object ObjectWithConfigRef) (*KeycloakAuthData, error) {
-	return MakeKeycloakAuthDataFromKeycloakConfig(h.operatorNamespace, object.GetConfigRef())
+	return MakeKeycloakAuthDataFromKeycloakConfig(h.watchNamespace, object.GetConfigRef())
 }
 
 func MakeKeycloakAuthDataFromKeycloakConfig(
