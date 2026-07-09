@@ -119,7 +119,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: run-local
 run-local: manifests generate fmt vet ## Run a controller from your host.
-	WATCH_NAMESPACE="keycloak" OPERATOR_NAMESPACE="keycloak" go run ./cmd/main.go
+	WATCH_NAMESPACE="keycloak" go run ./cmd/main.go
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
