@@ -26,6 +26,10 @@ func NewProcessPermissions(keycloakApiClient keycloak.Client, k8sClient client.C
 	return &ProcessPermissions{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (h *ProcessPermissions) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	h.keycloakApiClient = keycloakApiClient
+}
+
 func (h *ProcessPermissions) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -24,9 +25,15 @@ type RealmUserHandler interface {
 		realmName string,
 		userCtx *UserContext,
 	) error
+	WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient)
+}
+
+type ControllerHelper interface {
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
 }
 
 type Chain struct {
+	helper   ControllerHelper
 	handlers []RealmUserHandler
 }
 
@@ -49,6 +56,21 @@ func (ch *Chain) Serve(
 		h := ch.handlers[i]
 
 		err := h.Serve(ctx, user, realmName, userCtx)
+		// Refresh Token
+		if helper.IsUnauthorizedError(err) {
+			log.Info("KeycloakRealmUser chain refreshToken")
+			cl, errCl := ch.refreshToken(ctx, user)
+			if errCl != nil {
+				log.Error(errCl, "KeycloakRealmUser chain refreshToken error")
+
+				return errCl
+			}
+
+			h.WithKeycloakApiClient(cl)
+
+			err = h.Serve(ctx, user, realmName, userCtx)
+		}
+
 		if err != nil {
 			log.Info("KeycloakRealmUser chain finished with error")
 
@@ -61,11 +83,20 @@ func (ch *Chain) Serve(
 	return nil
 }
 
+func (ch *Chain) refreshToken(
+	ctx context.Context,
+	user *keycloakApiAlpha.KeycloakUser) (*keycloakv2.KeycloakClient, error) {
+	return ch.helper.CreateKeycloakClientV2FromConfigRef(ctx, user)
+}
+
 func MakeChain(
+	helper ControllerHelper,
 	k8sClient client.Client,
 	kClientV2 *keycloakv2.KeycloakClient,
 ) *Chain {
-	ch := &Chain{}
+	ch := &Chain{
+		helper: helper,
+	}
 
 	ch.Use(
 		NewCreateOrUpdateUser(k8sClient, kClientV2),

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -76,6 +77,12 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (c
 		}
 
 		return ctrl.Result{}, fmt.Errorf("unable to get keycloak realm user from k8s: %w", err)
+	}
+
+	// Check for paused annotation
+	if objectmeta.ReconcilePaused(&instance) {
+		log.Info("Reconciliation is paused for this resource", "name", "KeycloakRealmUser")
+		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
 	}
 
 	oldStatus := instance.Status
@@ -161,7 +168,22 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha
 	if instance.Spec.KeepResource {
 		if instance.GetDeletionTimestamp() != nil {
 			if controllerutil.ContainsFinalizer(instance, finalizerName) {
-				if err := chain.NewRemoveUser(kClientV2).ServeRequest(ctx, instance, realmName); err != nil {
+				userCH := chain.NewRemoveUser(kClientV2)
+
+				err := userCH.ServeRequest(ctx, instance, realmName)
+				// Refresh Token
+				if helper.IsUnauthorizedError(err) {
+					cl, errCl := r.helper.CreateKeycloakClientV2FromConfigRef(ctx, instance)
+					if errCl != nil {
+						return errCl
+					}
+
+					userCH.WithKeycloakApiClient(cl)
+
+					err = userCH.ServeRequest(ctx, instance, realmName)
+				}
+
+				if err != nil {
 					return fmt.Errorf("failed to remove user: %w", err)
 				}
 
@@ -182,7 +204,7 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha
 		}
 	}
 
-	if err := chain.MakeChain(r.client, kClientV2).Serve(ctx, instance, realmName); err != nil {
+	if err := chain.MakeChain(r.helper, r.client, kClientV2).Serve(ctx, instance, realmName); err != nil {
 		return fmt.Errorf("error during realm user chain: %w", err)
 	}
 

@@ -19,6 +19,10 @@ func NewRemoveUser(kClientV2 *keycloakv2.KeycloakClient) *RemoveUser {
 	return &RemoveUser{kClientV2: kClientV2}
 }
 
+func (h *RemoveUser) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *RemoveUser) ServeRequest(ctx context.Context, user *keycloakApiAlpha.KeycloakUser, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

@@ -27,6 +27,10 @@ func NewPutIDP(keycloakApiClient keycloak.Client, k8sClient client.Client, secre
 	return &PutIDP{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient, secretRef: secretRef}
 }
 
+func (el *PutIDP) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutIDP) Serve(
 	ctx context.Context,
 	keycloakRealmIDP *keycloakApiAlpha.IdentityProvider,

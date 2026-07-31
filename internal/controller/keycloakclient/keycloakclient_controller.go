@@ -79,7 +79,7 @@ func (r *ReconcileKeycloakClientSettings) SetupWithManager(mgr ctrl.Manager, suc
 // Reconcile is a loop for reconciling KeycloakClientSettings object.
 func (r *ReconcileKeycloakClientSettings) Reconcile(ctx context.Context, request reconcile.Request) (result reconcile.Result, resultErr error) {
 	log := ctrl.LoggerFrom(ctx)
-	log.Info("Reconciling KeycloakClientSettings")
+	log.Info("Reconciling KeycloakClient")
 
 	var instance keycloakApi.KeycloakClient
 	if err := r.client.Get(ctx, request.NamespacedName, &instance); err != nil {
@@ -90,6 +90,12 @@ func (r *ReconcileKeycloakClientSettings) Reconcile(ctx context.Context, request
 		resultErr = err
 
 		return result, resultErr
+	}
+
+	// Check for paused annotation
+	if objectmeta.ReconcilePaused(&instance) {
+		log.Info("Reconciliation is paused for this resource", "name", "KeycloakClient")
+		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
 	}
 
 	if err := r.tryReconcile(ctx, &instance); err != nil {
@@ -166,10 +172,10 @@ func (r *ReconcileKeycloakClientSettings) tryReconcile(ctx context.Context, keyc
 	deleted, err := r.helper.TryToDelete(
 		ctx,
 		keycloakClientSettings,
-		makeTerminator(DataTerminator{
+		makeTerminator(r.helper, DataTerminator{
 			ClientIDs:      keycloakClientSettings.Status.ClientIDs,
 			ClientScopeIDs: keycloakClientSettings.Status.ClientScopeIDs,
-		}, realm, kClient, objectmeta.PreserveResourcesOnDeletion(keycloakClientSettings)),
+		}, realm, kClient, keycloakClientSettings, objectmeta.PreserveResourcesOnDeletion(keycloakClientSettings)),
 		keyCloakClientOperatorFinalizerName,
 	)
 	if err != nil {
@@ -190,11 +196,11 @@ func (r *ReconcileKeycloakClientSettings) tryReconcile(ctx context.Context, keyc
 		return fmt.Errorf("unable to remove finalizer: %w", err)
 	}
 
-	if err = chainScope.MakeChain(kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
+	if err = chainScope.MakeChain(r.helper, kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
 		return fmt.Errorf("unable to serve keycloak client scope: %w", err)
 	}
 
-	if err = chainClient.MakeChain(kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
+	if err = chainClient.MakeChain(r.helper, kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
 		return fmt.Errorf("unable to serve keycloak client: %w", err)
 	}
 

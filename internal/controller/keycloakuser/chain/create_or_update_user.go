@@ -23,6 +23,10 @@ func NewCreateOrUpdateUser(k8sClient client.Client, kClientV2 *keycloakv2.Keyclo
 	return &CreateOrUpdateUser{k8sClient: k8sClient, kClientV2: kClientV2}
 }
 
+func (h *CreateOrUpdateUser) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *CreateOrUpdateUser) Serve(
 	ctx context.Context,
 	user *keycloakApiAlpha.KeycloakUser,

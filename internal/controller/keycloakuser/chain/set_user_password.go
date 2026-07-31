@@ -61,6 +61,10 @@ func NewSetUserPassword(k8sClient client.Client, kClientV2 *keycloakv2.KeycloakC
 	return &SetUserPassword{k8sClient: k8sClient, kClientV2: kClientV2}
 }
 
+func (h *SetUserPassword) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *SetUserPassword) Serve(
 	ctx context.Context,
 	user *keycloakApiAlpha.KeycloakUser,

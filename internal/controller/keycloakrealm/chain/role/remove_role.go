@@ -22,6 +22,10 @@ func NewRemoveRole(
 	}
 }
 
+func (h *RemoveRole) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *RemoveRole) ServeRequest(ctx context.Context, role *keycloakApi.Role, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

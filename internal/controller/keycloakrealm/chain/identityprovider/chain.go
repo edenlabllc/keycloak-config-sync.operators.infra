@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -20,9 +22,16 @@ type ClientHandler interface {
 		group *keycloakApiAlpha.IdentityProvider,
 		realmName, namespace string,
 	) error
+	WithKeycloakApiClient(keycloakApiClient keycloak.Client)
+}
+
+type ControllerHelper interface {
+	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
 }
 
 type Chain struct {
+	helper   ControllerHelper
 	handlers []ClientHandler
 	flush    FlushFunc
 }
@@ -41,7 +50,7 @@ func (ch *Chain) Serve(
 	log.Info("Starting KeycloakIDP chain")
 
 	for _, ip := range realm.Spec.IdentityProviders {
-		if err := ch.run(ctx, &ip, realm.Spec.RealmName, realm.Namespace); err != nil {
+		if err := ch.run(ctx, realm, &ip, realm.Spec.RealmName, realm.Namespace); err != nil {
 			return err
 		}
 
@@ -58,6 +67,7 @@ func (ch *Chain) Serve(
 }
 
 func (ch *Chain) run(ctx context.Context,
+	realm *keycloakApiAlpha.KeycloakRealm,
 	ip *keycloakApiAlpha.IdentityProvider,
 	realmName, namespace string) error {
 	log := ctrl.LoggerFrom(ctx)
@@ -67,6 +77,21 @@ func (ch *Chain) run(ctx context.Context,
 		h := ch.handlers[i]
 
 		err := h.Serve(ctx, ip, realmName, namespace)
+		// Refresh Token
+		if helper.IsUnauthorizedError(err) {
+			log.Info("KeycloakIDP chain refreshToken")
+			cl, errCl := ch.refreshToken(ctx, realm)
+			if errCl != nil {
+				log.Error(errCl, "KeycloakIDP chain refreshToken error")
+
+				return errCl
+			}
+
+			h.WithKeycloakApiClient(cl)
+
+			err = h.Serve(ctx, ip, realmName, namespace)
+		}
+
 		if err != nil {
 			log.Info("KeycloakIDP chain finished with error")
 
@@ -79,12 +104,20 @@ func (ch *Chain) run(ctx context.Context,
 	return nil
 }
 
+func (ch *Chain) refreshToken(
+	ctx context.Context,
+	realm *keycloakApiAlpha.KeycloakRealm) (keycloak.Client, error) {
+	return ch.helper.CreateKeycloakClientFromConfigRef(ctx, realm)
+}
+
 func MakeChain(
+	helper ControllerHelper,
 	keycloakApiClient keycloak.Client,
 	k8sClient client.Client,
 ) *Chain {
 	c := &Chain{
-		flush: NewFlush(keycloakApiClient, k8sClient).Flush,
+		helper: helper,
+		flush:  NewFlush(keycloakApiClient, k8sClient).Flush,
 	}
 
 	c.Use(

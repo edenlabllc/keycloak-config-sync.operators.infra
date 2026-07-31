@@ -21,6 +21,10 @@ func NewPutClientScope(keycloakApiClient keycloak.Client, k8sClient client.Clien
 	return &PutClientScope{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (el *PutClientScope) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutClientScope) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	if err := el.putClientScope(ctx, keycloakClient, realmName); err != nil {
 		el.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync client scopes: %s", err.Error()))

@@ -19,6 +19,10 @@ func NewSyncUserRoles(kClientV2 *keycloakv2.KeycloakClient) *SyncUserRoles {
 	return &SyncUserRoles{kClientV2: kClientV2}
 }
 
+func (h *SyncUserRoles) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *SyncUserRoles) Serve(
 	ctx context.Context,
 	user *keycloakApiAlpha.KeycloakUser,

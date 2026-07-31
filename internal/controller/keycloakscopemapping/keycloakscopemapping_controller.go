@@ -35,6 +35,18 @@ type Helper interface {
 	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
 }
 
+type SyncErr struct {
+	Err error
+}
+
+func (se *SyncErr) Error() string {
+	if se.Err == nil {
+		return ""
+	}
+
+	return se.Err.Error()
+}
+
 type Reconcile struct {
 	client client.Client
 	helper Helper
@@ -95,10 +107,16 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, fmt.Errorf("unable to get keycloak scope mapping from k8s: %w", err)
 	}
 
+	// Check for paused annotation
+	if objectmeta.ReconcilePaused(scope) {
+		log.Info("Reconciliation is paused for this resource", "name", "KeycloakScopeMapping")
+		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
+	}
+
 	oldStatus := scope.Status
 
 	id, err := r.tryReconcile(ctx, scope)
-	if err != nil {
+	if err != nil && !isSyncErr(err) {
 		if errors.Is(err, helper.ErrKeycloakIsNotAvailable) {
 			return helper.RequeueOnKeycloakNotAvailable, nil
 		}
@@ -114,8 +132,15 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 	}
 
 	scope.Status.Error = ""
+	if err != nil && isSyncErr(err) {
+		scope.Status.Error = err.Error()
+	}
+
+	if id != "" {
+		scope.Status.ID = id
+	}
+
 	scope.Status.Phase = common.PhaseCompleted
-	scope.Status.ID = id
 
 	if statusErr := r.updateKeycloakScopeMappingStatus(ctx, scope, oldStatus); statusErr != nil {
 		return reconcile.Result{}, statusErr
@@ -127,6 +152,8 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 }
 
 func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha.KeycloakScopeMapping) (string, error) {
+	syncErr := &SyncErr{}
+
 	err := r.helper.SetRealmOwnerRef(ctx, instance)
 	if err != nil {
 		return "", fmt.Errorf("unable to set realm owner ref: %w", err)
@@ -153,7 +180,11 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha
 
 	id, err := r.Sync(ctx, instance, gocloak.PString(realm.Realm), cl)
 	if err != nil {
-		return "", fmt.Errorf("unable to sync scope mapping: %w", err)
+		if !helper.IsNoMatchScopeMapping(err) {
+			return "", fmt.Errorf("unable to create keycloak scope mapping: %w", err)
+		}
+
+		syncErr.Err = fmt.Errorf("unable to create keycloak scope mapping: %w", err)
 	}
 
 	if _, err = r.helper.TryToDelete(
@@ -172,7 +203,7 @@ func (r *Reconcile) tryReconcile(ctx context.Context, instance *keycloakApiAlpha
 		return "", fmt.Errorf("unable to delete scope mapping: %w", err)
 	}
 
-	return id, nil
+	return id, syncErr
 }
 
 func (r *Reconcile) Sync(ctx context.Context,
@@ -218,6 +249,10 @@ func syncScopeMapping(ctx context.Context,
 		return "", fmt.Errorf("unable to get client scope: %w", err)
 	}
 
+	if clientScope == nil || adapter.IsErrNotFound(err) {
+		return "", fmt.Errorf("not fount syncScopeMapping clientScope %s", instance.Spec.ClientScope)
+	}
+
 	if err := cl.SyncRealmScopeMapping(ctx, realmName, clientScope.ID, getAdapterRoles(instance)); err != nil {
 		return "", fmt.Errorf("failed to SyncRealmScopeMapping: %w", err)
 	}
@@ -233,8 +268,12 @@ func syncClientScopeMapping(ctx context.Context,
 	cl keycloak.Client,
 ) (string, error) {
 	existingClient, err := cl.GetClient(ctx, realmName, instance.Spec.FromClient)
-	if err != nil {
+	if err != nil && !adapter.IsErrNotFound(err) {
 		return "", fmt.Errorf("unable to get client: %w", err)
+	}
+
+	if existingClient == nil || adapter.IsErrNotFound(err) {
+		return "", fmt.Errorf("not fount syncClientScopeMapping FromClient %s", instance.Spec.FromClient)
 	}
 
 	fromClientID := gocloak.PString(existingClient.ID)
@@ -252,6 +291,14 @@ func syncClientScopeMapping(ctx context.Context,
 	instance.Status.ID = fromClientID
 
 	return instance.Status.ID, nil
+}
+
+func isSyncErr(err error) bool {
+	if _, ok := err.(*SyncErr); ok {
+		return true
+	}
+
+	return false
 }
 
 func getAdapterRoles(instance *keycloakApiAlpha.KeycloakScopeMapping) []adapter.RealmRole {

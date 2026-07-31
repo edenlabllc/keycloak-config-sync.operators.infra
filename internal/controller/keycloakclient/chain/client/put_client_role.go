@@ -21,6 +21,10 @@ func NewPutClientRole(keycloakApiClient keycloak.Client, k8sClient client.Client
 	return &PutClientRole{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (el *PutClientRole) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutClientRole) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	if err := el.putKeycloakClientRole(ctx, keycloakClient, realmName); err != nil {
 		el.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync client roles: %s", err.Error()))

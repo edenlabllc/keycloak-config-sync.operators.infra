@@ -307,7 +307,7 @@ func (a GoCloakAdapter) syncClientScopeProtocolMappers(ctx context.Context, real
 			Post(a.buildPath(createClientScopeProtocolMapper))
 
 		if err = a.checkError(err, rsp); err != nil {
-			return fmt.Errorf("error during client scope protocol mapper creation: %w", err)
+			return fmt.Errorf("error during client scope protocol mapper creation [%s]: %w", pm.Name, err)
 		}
 	}
 

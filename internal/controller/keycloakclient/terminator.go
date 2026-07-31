@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak/adapter"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,14 +20,24 @@ type terminator struct {
 	kClient                     keycloak.Client
 	preserveResourcesOnDeletion bool
 	dataTerminator              DataTerminator
+	helper                      Helper
+	keycloakClientSettings      *keycloakApi.KeycloakClient
 }
 
-func makeTerminator(data DataTerminator, realmName string, kClient keycloak.Client, preserveResourcesOnDeletion bool) *terminator {
+func makeTerminator(
+	helper Helper,
+	data DataTerminator,
+	realmName string,
+	kClient keycloak.Client,
+	keycloakClientSettings *keycloakApi.KeycloakClient,
+	preserveResourcesOnDeletion bool) *terminator {
 	return &terminator{
+		helper:                      helper,
 		realmName:                   realmName,
 		kClient:                     kClient,
 		preserveResourcesOnDeletion: preserveResourcesOnDeletion,
 		dataTerminator:              data,
+		keycloakClientSettings:      keycloakClientSettings,
 	}
 }
 
@@ -58,6 +70,20 @@ func (t *terminator) deleteClient(ctx context.Context, clientID string) error {
 	log.Info("Start deleting keycloak client")
 
 	if err := t.kClient.DeleteClient(ctx, clientID, t.realmName); err != nil {
+		if helper.IsUnauthorizedError(err) {
+			log.Info("deleteClient refreshToken")
+			cl, errCl := t.refreshToken(ctx, t.keycloakClientSettings)
+			if errCl != nil {
+				log.Error(errCl, "deleteClient refreshToken error")
+
+				return errCl
+			}
+
+			t.kClient = cl
+
+			return t.deleteClient(ctx, clientID)
+		}
+
 		if adapter.IsErrNotFound(err) {
 			log.Info("Client not found, skipping deletion.")
 
@@ -77,6 +103,20 @@ func (t *terminator) deleteClientScope(ctx context.Context, clientScopeID string
 	log.Info("Start deleting client scope")
 
 	if err := t.kClient.DeleteClientScope(ctx, t.realmName, clientScopeID); err != nil {
+		if helper.IsUnauthorizedError(err) {
+			log.Info("deleteClientScope refreshToken")
+			cl, errCl := t.refreshToken(ctx, t.keycloakClientSettings)
+			if errCl != nil {
+				log.Error(errCl, "deleteClientScope refreshToken error")
+
+				return errCl
+			}
+
+			t.kClient = cl
+
+			return t.deleteClientScope(ctx, clientScopeID)
+		}
+
 		if adapter.IsErrNotFound(err) {
 			log.Info("Client scope not found, skipping deletion.")
 
@@ -89,4 +129,10 @@ func (t *terminator) deleteClientScope(ctx context.Context, clientScopeID string
 	log.Info("Client scope has been deleted")
 
 	return nil
+}
+
+func (t *terminator) refreshToken(
+	ctx context.Context,
+	keycloakClientSettings *keycloakApi.KeycloakClient) (keycloak.Client, error) {
+	return t.helper.CreateKeycloakClientFromConfigRef(ctx, keycloakClientSettings)
 }

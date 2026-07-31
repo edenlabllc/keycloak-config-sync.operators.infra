@@ -22,6 +22,10 @@ func NewSyncAuthFlowExecutions(kClient *keycloakv2.KeycloakClient) *SyncAuthFlow
 	return &SyncAuthFlowExecutions{kClient: kClient}
 }
 
+func (h *SyncAuthFlowExecutions) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClient = kClientV2
+}
+
 func (h *SyncAuthFlowExecutions) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Syncing auth flow executions", "alias", flow.Spec.Alias)

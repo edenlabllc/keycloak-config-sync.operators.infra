@@ -18,6 +18,7 @@ import (
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakauthflow/chain"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 )
 
 const successRequeueTime = time.Minute * 10
@@ -74,6 +75,12 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, err
 	}
 
+	// Check for paused annotation
+	if objectmeta.ReconcilePaused(instance) {
+		log.Info("Reconciliation is paused for this resource", "name", "KeycloakAuthFlow")
+		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
+	}
+
 	if instance == nil {
 		return reconcile.Result{}, nil
 	}
@@ -125,7 +132,17 @@ func (r *Reconcile) initializeReconciliation(ctx context.Context, request reconc
 
 func (r *Reconcile) handleDeletion(ctx context.Context, instance *keycloakApiAlpha.KeycloakAuthFlow, kClient *keycloakv2.KeycloakClient, realmName string) (reconcile.Result, error) {
 	if controllerutil.ContainsFinalizer(instance, common.FinalizerName) || controllerutil.ContainsFinalizer(instance, legacyFinalizerName) {
-		if err := chain.NewRemoveAuthFlow(kClient, r.client).Serve(ctx, instance, realmName); err != nil {
+		ch := chain.NewRemoveAuthFlow(kClient, r.client)
+		if err := ch.Serve(ctx, instance, realmName); err != nil {
+			if helper.IsUnauthorizedError(err) {
+				cl, errRefreshToken := r.helper.CreateKeycloakClientV2FromConfigRef(ctx, instance)
+				if errRefreshToken != nil {
+					return ctrl.Result{}, fmt.Errorf("handleDeletion failed to refreshToke auth flow: %w", errRefreshToken)
+				}
+
+				return r.handleReconciliation(ctx, instance, cl, realmName)
+			}
+
 			return ctrl.Result{}, fmt.Errorf("failed to remove auth flow: %w", err)
 		}
 
@@ -151,7 +168,7 @@ func (r *Reconcile) handleReconciliation(ctx context.Context, instance *keycloak
 
 	oldStatus := instance.Status
 
-	if err := chain.MakeChain(kClient).Serve(ctx, instance, realmName); err != nil {
+	if err := chain.MakeChain(r.helper, kClient).Serve(ctx, instance, realmName); err != nil {
 		log.Error(err, "An error has occurred while handling KeycloakAuthFlow")
 
 		resultErr := fmt.Errorf("auth flow chain processing failed: %w", err)

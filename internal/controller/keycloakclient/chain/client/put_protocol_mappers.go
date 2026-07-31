@@ -24,6 +24,10 @@ func NewPutProtocolMappers(keycloakApiClient keycloak.Client, k8sClient client.C
 	return &PutProtocolMappers{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (el *PutProtocolMappers) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutProtocolMappers) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	if err := el.putProtocolMappers(keycloakClient, realmName); err != nil {
 		el.setFailureCondition(ctx, keycloakClient, fmt.Sprintf("Failed to sync protocol mappers: %s", err.Error()))

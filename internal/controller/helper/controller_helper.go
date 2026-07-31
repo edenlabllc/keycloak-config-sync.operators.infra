@@ -2,7 +2,9 @@ package helper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -402,4 +404,36 @@ func RemoveSliceIndex[T any](s []T, i int) []T {
 	}
 
 	return append(s[:i], s[i+1:]...)
+}
+
+// IsUnauthorizedError checks if the call was rejected with code 401
+func IsUnauthorizedError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Перевірка типизованої помилки бібліотеки gocloak (HTTPError)
+	var apiErr *gocloak.APIError
+	if errors.As(err, &apiErr) {
+		if apiErr.Code == http.StatusUnauthorized {
+			return true
+		}
+	}
+
+	// Текстова перевірка на випадок обгортки (Wrap) або прямої відповіді HTTP Status
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "401") ||
+		strings.Contains(errStr, "unauthorized") ||
+		strings.Contains(errStr, "invalid_token") ||
+		strings.Contains(errStr, "token expired")
+}
+
+func IsNoMatchScopeMapping(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "failed to find role with name") ||
+		strings.Contains(errStr, "not found")
 }

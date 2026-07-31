@@ -27,6 +27,9 @@ type PutAdminFineGrainedPermissions struct {
 func NewPutAdminFineGrainedPermissions(keycloakApiClient keycloak.Client) *PutAdminFineGrainedPermissions {
 	return &PutAdminFineGrainedPermissions{keycloakApiClient: keycloakApiClient}
 }
+func (el *PutAdminFineGrainedPermissions) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
 
 func (el *PutAdminFineGrainedPermissions) Serve(
 	ctx context.Context,
