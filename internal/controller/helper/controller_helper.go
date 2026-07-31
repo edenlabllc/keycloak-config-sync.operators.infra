@@ -412,7 +412,6 @@ func IsUnauthorizedError(err error) bool {
 		return false
 	}
 
-	// Перевірка типизованої помилки бібліотеки gocloak (HTTPError)
 	var apiErr *gocloak.APIError
 	if errors.As(err, &apiErr) {
 		if apiErr.Code == http.StatusUnauthorized {
@@ -420,7 +419,6 @@ func IsUnauthorizedError(err error) bool {
 		}
 	}
 
-	// Текстова перевірка на випадок обгортки (Wrap) або прямої відповіді HTTP Status
 	errStr := strings.ToLower(err.Error())
 	return strings.Contains(errStr, "401") ||
 		strings.Contains(errStr, "unauthorized") ||
