@@ -107,12 +107,6 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return reconcile.Result{}, fmt.Errorf("unable to get keycloak scope mapping from k8s: %w", err)
 	}
 
-	// Check for paused annotation
-	if objectmeta.ReconcilePaused(scope) {
-		log.Info("Reconciliation is paused for this resource", "name", "KeycloakScopeMapping")
-		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
-	}
-
 	oldStatus := scope.Status
 
 	id, err := r.tryReconcile(ctx, scope)

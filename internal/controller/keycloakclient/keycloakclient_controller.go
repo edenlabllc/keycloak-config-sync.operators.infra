@@ -92,12 +92,6 @@ func (r *ReconcileKeycloakClientSettings) Reconcile(ctx context.Context, request
 		return result, resultErr
 	}
 
-	// Check for paused annotation
-	if objectmeta.ReconcilePaused(&instance) {
-		log.Info("Reconciliation is paused for this resource", "name", "KeycloakClient")
-		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
-	}
-
 	if err := r.tryReconcile(ctx, &instance); err != nil {
 		if errors.Is(err, helper.ErrKeycloakIsNotAvailable) {
 			return ctrl.Result{

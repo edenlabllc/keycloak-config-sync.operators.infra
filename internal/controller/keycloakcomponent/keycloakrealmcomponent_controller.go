@@ -112,12 +112,6 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		return ctrl.Result{}, fmt.Errorf("unable to get KeycloakRealmComponent: %w", err)
 	}
 
-	// Check for paused annotation
-	if objectmeta.ReconcilePaused(keycloakRealmComponent) {
-		log.Info("Reconciliation is paused for this resource", "name", "KeycloakRealmComponent")
-		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
-	}
-
 	err := r.helper.SetRealmOwnerRef(ctx, keycloakRealmComponent)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("unable to get realm owner ref: %w", err)

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -77,12 +76,6 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (c
 		}
 
 		return ctrl.Result{}, fmt.Errorf("unable to get keycloak realm user from k8s: %w", err)
-	}
-
-	// Check for paused annotation
-	if objectmeta.ReconcilePaused(&instance) {
-		log.Info("Reconciliation is paused for this resource", "name", "KeycloakRealmUser")
-		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
 	}
 
 	oldStatus := instance.Status

@@ -18,7 +18,6 @@ import (
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakauthflow/chain"
 	keycloakv2 "github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
-	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/objectmeta"
 )
 
 const successRequeueTime = time.Minute * 10
@@ -73,12 +72,6 @@ func (r *Reconcile) Reconcile(ctx context.Context, request reconcile.Request) (r
 		}
 
 		return reconcile.Result{}, err
-	}
-
-	// Check for paused annotation
-	if objectmeta.ReconcilePaused(instance) {
-		log.Info("Reconciliation is paused for this resource", "name", "KeycloakAuthFlow")
-		return reconcile.Result{}, nil // Stop reconciliation, do not requeue
 	}
 
 	if instance == nil {
