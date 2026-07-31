@@ -27,8 +27,7 @@ func ReconcilePaused(object metav1.Object) bool {
 	return false
 }
 
-// isNil checks if a value inside the typed-nil pointer interface is not
-func isNil(i interface{}) bool {
+func isNil(i any) bool {
 	if i == nil {
 		return true
 	}
