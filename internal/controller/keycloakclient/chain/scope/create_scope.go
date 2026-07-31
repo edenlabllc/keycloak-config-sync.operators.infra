@@ -23,8 +23,19 @@ type CreateScope struct {
 	secretRef         secretRef
 }
 
-func NewCreateScope(keycloakApiClient keycloak.Client, k8sClient client.Client, secretRef secretRef) *CreateScope {
-	return &CreateScope{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient, secretRef: secretRef}
+func NewCreateScope(
+	keycloakApiClient keycloak.Client,
+	k8sClient client.Client,
+	secretRef secretRef) *CreateScope {
+	return &CreateScope{
+		keycloakApiClient: keycloakApiClient,
+		k8sClient:         k8sClient,
+		secretRef:         secretRef,
+	}
+}
+
+func (el *CreateScope) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
 }
 
 func (el *CreateScope) Serve(ctx context.Context, scope *Scope, realmName string) error {
@@ -52,7 +63,7 @@ func (el *CreateScope) updateKeycloakClientScopeStatus(
 func (el *CreateScope) createScope(
 	ctx context.Context, scope *Scope, realmName string) (string, error) {
 	log := ctrl.LoggerFrom(ctx)
-	log.Info("Start creation of Keycloak client scope")
+	log.Info("Start creation of Keycloak client scope name", "scopeName", scope.ClientScope.Name)
 
 	clientScope, err := el.keycloakApiClient.GetClientScope(ctx, scope.ClientScope.Name, realmName)
 	if err != nil && !adapter.IsErrNotFound(err) {

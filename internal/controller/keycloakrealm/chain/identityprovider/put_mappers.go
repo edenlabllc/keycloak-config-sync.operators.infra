@@ -23,6 +23,10 @@ func NewPutIDPMappers(keycloakApiClient keycloak.Client, k8sClient client.Client
 	return &PutIDPMappers{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient, secretRef: secretRef}
 }
 
+func (el *PutIDPMappers) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutIDPMappers) Serve(ctx context.Context, keycloakRealmIDP *keycloakApiAlpha.IdentityProvider, realmName, _ string) error {
 	err := syncIDPMappers(ctx, keycloakRealmIDP, el.keycloakApiClient, realmName)
 	if err != nil {

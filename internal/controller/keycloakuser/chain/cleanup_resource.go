@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloakv2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -16,6 +17,9 @@ type CleanupResource struct {
 
 func NewCleanupResource(k8sClient client.Client) *CleanupResource {
 	return &CleanupResource{k8sClient: k8sClient}
+}
+
+func (h *CleanupResource) WithKeycloakApiClient(_ *keycloakv2.KeycloakClient) {
 }
 
 func (h *CleanupResource) Serve(

@@ -26,6 +26,10 @@ func NewProcessPolicy(keycloakApiClient keycloak.Client, k8sClient client.Client
 	return &ProcessPolicy{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (h *ProcessPolicy) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	h.keycloakApiClient = keycloakApiClient
+}
+
 // Serve method for processing keycloak client policies.
 func (h *ProcessPolicy) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)

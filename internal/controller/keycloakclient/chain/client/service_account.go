@@ -23,6 +23,10 @@ func NewServiceAccount(keycloakApiClient keycloak.Client, k8sClient client.Clien
 	return &ServiceAccount{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (el *ServiceAccount) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *ServiceAccount) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	if keycloakClient.Client.ServiceAccount == nil || !keycloakClient.Client.ServiceAccount.Enabled {
 		return nil

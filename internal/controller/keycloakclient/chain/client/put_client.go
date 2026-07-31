@@ -49,6 +49,10 @@ func NewPutClient(keycloakApiClient keycloak.Client, k8sClient client.Client, se
 	}
 }
 
+func (el *PutClient) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutClient) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	id, err := el.putKeycloakClient(ctx, keycloakClient, realmName)
 	if err != nil {

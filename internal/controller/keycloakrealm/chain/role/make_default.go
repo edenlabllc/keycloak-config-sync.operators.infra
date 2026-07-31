@@ -18,6 +18,10 @@ func NewMakeDefault(kClientV2 *keycloakv2.KeycloakClient) *MakeDefault {
 	return &MakeDefault{kClientV2: kClientV2}
 }
 
+func (h *MakeDefault) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *MakeDefault) Serve(
 	ctx context.Context,
 	role *keycloakApi.Role,

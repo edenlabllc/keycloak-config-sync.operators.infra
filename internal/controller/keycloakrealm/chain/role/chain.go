@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/helper"
+	"github.com/edenlabllc/keycloak-config-sync.operators.infra/pkg/client/keycloak"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -29,9 +31,16 @@ type RealmRoleHandler interface {
 		realmName string,
 		roleCtx *RoleContext,
 	) error
+	WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient)
+}
+
+type ControllerHelper interface {
+	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
+	CreateKeycloakClientV2FromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (*keycloakv2.KeycloakClient, error)
 }
 
 type Chain struct {
+	helper   ControllerHelper
 	handlers []RealmRoleHandler
 	flush    FlushFunc
 }
@@ -52,7 +61,7 @@ func (ch *Chain) Serve(
 	for _, role := range realm.Spec.Roles {
 		roleCtx := &RoleContext{}
 
-		if err := ch.run(ctx, &role, realm.Spec.RealmName, roleCtx); err != nil {
+		if err := ch.run(ctx, realm, &role, realm.Spec.RealmName, roleCtx); err != nil {
 			return err
 		}
 
@@ -70,6 +79,7 @@ func (ch *Chain) Serve(
 
 func (ch *Chain) run(
 	ctx context.Context,
+	realm *keycloakApi.KeycloakRealm,
 	role *keycloakApi.Role,
 	realmName string,
 	roleCtx *RoleContext) error {
@@ -80,6 +90,21 @@ func (ch *Chain) run(
 		h := ch.handlers[i]
 
 		err := h.Serve(ctx, role, realmName, roleCtx)
+		// Refresh Token
+		if helper.IsUnauthorizedError(err) {
+			log.Info("KeycloakRealmRole chain refreshToken")
+			cl, errCl := ch.refreshToken(ctx, realm)
+			if errCl != nil {
+				log.Error(errCl, "KeycloakRealmRole chain refreshToken error")
+
+				return errCl
+			}
+
+			h.WithKeycloakApiClient(cl)
+
+			err = h.Serve(ctx, role, realmName, roleCtx)
+		}
+
 		if err != nil {
 			log.Info("KeycloakRealmRole chain finished with error")
 
@@ -92,11 +117,19 @@ func (ch *Chain) run(
 	return nil
 }
 
+func (ch *Chain) refreshToken(
+	ctx context.Context,
+	realm *keycloakApi.KeycloakRealm) (*keycloakv2.KeycloakClient, error) {
+	return ch.helper.CreateKeycloakClientV2FromConfigRef(ctx, realm)
+}
+
 func MakeChain(
+	helper ControllerHelper,
 	kClientV2 *keycloakv2.KeycloakClient,
 	k8sClient client.Client) *Chain {
 	ch := &Chain{
-		flush: NewFlush(kClientV2, k8sClient).Flush,
+		helper: helper,
+		flush:  NewFlush(kClientV2, k8sClient).Flush,
 	}
 
 	ch.Use(

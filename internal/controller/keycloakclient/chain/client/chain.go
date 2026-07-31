@@ -27,15 +27,21 @@ type DataClient struct {
 	ReasonScope *ReasonScope
 }
 
+type ControllerHelper interface {
+	CreateKeycloakClientFromConfigRef(ctx context.Context, object helper.ObjectWithConfigRef) (keycloak.Client, error)
+}
+
 type ClientHandler interface {
 	Serve(
 		ctx context.Context,
 		keycloakClient *DataClient,
 		realmName string,
 	) error
+	WithKeycloakApiClient(keycloakApiClient keycloak.Client)
 }
 
 type Chain struct {
+	helper   ControllerHelper
 	handlers []ClientHandler
 }
 
@@ -70,6 +76,21 @@ func (ch *Chain) Serve(
 			h := ch.handlers[i]
 
 			err := h.Serve(ctx, dataClient, realmName)
+			// Refresh Token
+			if helper.IsUnauthorizedError(err) {
+				log.Info("KeycloakClientScope chain refreshToken")
+				cl, errCl := ch.refreshToken(ctx, keycloakClientSettings)
+				if errCl != nil {
+					log.Error(errCl, "KeycloakClientScope chain refreshToken error")
+
+					return errCl
+				}
+
+				h.WithKeycloakApiClient(cl)
+
+				err = h.Serve(ctx, dataClient, realmName)
+			}
+
 			if err != nil {
 				log.Info("KeycloakClient chain finished with error")
 
@@ -86,11 +107,20 @@ func (ch *Chain) Serve(
 	return nil
 }
 
+func (ch *Chain) refreshToken(
+	ctx context.Context,
+	keycloakClientSettings *keycloakApi.KeycloakClient) (keycloak.Client, error) {
+	return ch.helper.CreateKeycloakClientFromConfigRef(ctx, keycloakClientSettings)
+}
+
 func MakeChain(
+	helper ControllerHelper,
 	keycloakApiClient keycloak.Client,
 	k8sClient client.Client,
 ) *Chain {
-	c := &Chain{}
+	c := &Chain{
+		helper: helper,
+	}
 
 	c.Use(
 		NewPutClient(keycloakApiClient, k8sClient, secretref.NewSecretRef(k8sClient)),
