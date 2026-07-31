@@ -23,6 +23,10 @@ func NewRemoveAuthFlow(kClient *keycloakv2.KeycloakClient, k8sClient client.Clie
 	return &RemoveAuthFlow{kClient: kClient, k8sClient: k8sClient}
 }
 
+func (h *RemoveAuthFlow) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClient = kClientV2
+}
+
 func (h *RemoveAuthFlow) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx).WithValues("realm", realmName, "alias", flow.Spec.Alias)
 

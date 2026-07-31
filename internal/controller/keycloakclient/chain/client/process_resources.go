@@ -28,6 +28,10 @@ func NewProcessResources(keycloakApiClient keycloak.Client, k8sClient client.Cli
 	return &ProcessResources{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (h *ProcessResources) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	h.keycloakApiClient = keycloakApiClient
+}
+
 func (h *ProcessResources) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

@@ -27,6 +27,10 @@ func NewFlush(
 	}
 }
 
+func (h *Flush) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *Flush) Flush(ctx context.Context, realm *keycloakApiAlpha.KeycloakRealm, rIDs map[string]string) error {
 	if !h.hasReconciliationStrategyFull(realm) {
 		return nil

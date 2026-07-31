@@ -18,6 +18,10 @@ func NewCreateOrUpdateRole(kClientV2 *keycloakv2.KeycloakClient) *CreateOrUpdate
 	return &CreateOrUpdateRole{kClientV2: kClientV2}
 }
 
+func (h *CreateOrUpdateRole) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *CreateOrUpdateRole) Serve(
 	ctx context.Context,
 	role *keycloakApi.Role,

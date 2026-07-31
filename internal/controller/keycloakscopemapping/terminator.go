@@ -66,6 +66,10 @@ func (t *terminator) DeleteResource(ctx context.Context) error {
 }
 
 func (t *terminator) delete(ctx context.Context) error {
+	if t.scopeID == "" {
+		return nil
+	}
+
 	if (t.clientScope != "" || t.client != "") && t.scopeID != "" {
 		return t.kClient.DeleteClientScopeMappingRealmRoles(ctx, t.realmName, t.scopeID, adapter.ScopeMappingOptions{
 			ClientScope: t.clientScope,

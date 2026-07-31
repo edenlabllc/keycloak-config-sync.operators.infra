@@ -28,6 +28,10 @@ func NewPutAdminFineGrainedPermissions(keycloakApiClient keycloak.Client, k8sCli
 	return &PutAdminFineGrainedPermissions{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (el *PutAdminFineGrainedPermissions) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	el.keycloakApiClient = keycloakApiClient
+}
+
 func (el *PutAdminFineGrainedPermissions) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

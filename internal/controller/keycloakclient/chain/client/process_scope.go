@@ -26,6 +26,10 @@ func NewProcessScope(keycloakApiClient keycloak.Client, k8sClient client.Client)
 	return &ProcessScope{keycloakApiClient: keycloakApiClient, k8sClient: k8sClient}
 }
 
+func (h *ProcessScope) WithKeycloakApiClient(keycloakApiClient keycloak.Client) {
+	h.keycloakApiClient = keycloakApiClient
+}
+
 func (h *ProcessScope) Serve(ctx context.Context, keycloakClient *DataClient, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 

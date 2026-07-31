@@ -20,6 +20,10 @@ func NewSyncComposites(kClientV2 *keycloakv2.KeycloakClient) *SyncComposites {
 	return &SyncComposites{kClientV2: kClientV2}
 }
 
+func (h *SyncComposites) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *SyncComposites) Serve(
 	ctx context.Context,
 	role *keycloakApi.Role,

@@ -22,6 +22,10 @@ func NewCreateOrUpdateAuthFlow(kClient *keycloakv2.KeycloakClient) *CreateOrUpda
 	return &CreateOrUpdateAuthFlow{kClient: kClient}
 }
 
+func (h *CreateOrUpdateAuthFlow) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClient = kClientV2
+}
+
 func (h *CreateOrUpdateAuthFlow) Serve(ctx context.Context, flow *keycloakApiAlpha.KeycloakAuthFlow, realmName string) error {
 	log := ctrl.LoggerFrom(ctx)
 	log.Info("Creating or updating auth flow")

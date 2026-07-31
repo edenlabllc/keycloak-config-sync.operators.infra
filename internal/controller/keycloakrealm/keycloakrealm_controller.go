@@ -138,7 +138,7 @@ func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keyclo
 	deleted, err := r.helper.TryToDelete(
 		ctx,
 		realm,
-		makeTerminator(realm.Spec, kClientV2, objectmeta.PreserveResourcesOnDeletion(realm)),
+		makeTerminator(r.helper, realm, realm.Spec, kClientV2, objectmeta.PreserveResourcesOnDeletion(realm)),
 		keyCloakRealmOperatorFinalizerName,
 	)
 	if err != nil {
@@ -153,16 +153,16 @@ func (r *ReconcileKeycloakRealm) tryReconcile(ctx context.Context, realm *keyclo
 		return fmt.Errorf("error during realm chain: %w", err)
 	}
 
-	if err = roleChan.MakeChain(kClientV2, r.client).Serve(ctx, realm); err != nil {
+	if err = roleChan.MakeChain(r.helper, kClientV2, r.client).Serve(ctx, realm); err != nil {
 		return fmt.Errorf("error during realm role chain: %w", err)
 	}
 
-	if err = groupChan.MakeChain().Serve(ctx, realm, kClientV2, r.client); err != nil {
+	if err = groupChan.MakeChain(r.helper).Serve(ctx, realm, kClientV2, r.client); err != nil {
 		return fmt.Errorf("error during realm group chain: %w", err)
 	}
 
 	// TODO: need fix, use only kClientV2 and remove kClient
-	if err = idpChan.MakeChain(kClient, r.client).Serve(ctx, realm); err != nil {
+	if err = idpChan.MakeChain(r.helper, kClient, r.client).Serve(ctx, realm); err != nil {
 		return fmt.Errorf("unable to serve keycloak realm idp: %w", err)
 	}
 

@@ -35,6 +35,10 @@ func (g resolvedGroup) label() string {
 	return g.name
 }
 
+func (h *SyncUserGroups) WithKeycloakApiClient(kClientV2 *keycloakv2.KeycloakClient) {
+	h.kClientV2 = kClientV2
+}
+
 func (h *SyncUserGroups) Serve(
 	ctx context.Context,
 	user *keycloakApiAlpha.KeycloakUser,
