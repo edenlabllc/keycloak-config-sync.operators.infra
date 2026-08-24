@@ -19,6 +19,7 @@ type Client interface {
 	KCloakClientRoles
 	KAuthFlow
 	KCloakComponents
+	KCloakClientRegistrationPolicy
 	KCloakClientScope
 	KIdentityProvider
 	KOrganizations
@@ -207,6 +208,19 @@ type KCloakComponents interface {
 	UpdateComponent(ctx context.Context, realmName string, component *adapter.Component) error
 	DeleteComponent(ctx context.Context, realmName, componentName string) error
 	GetComponent(ctx context.Context, realmName, componentName string) (*adapter.Component, error)
+	GetComponents(
+		ctx context.Context,
+		realmName string,
+		params *adapter.GetComponentsParams,
+	) ([]adapter.Component, error)
+}
+
+type KCloakClientRegistrationPolicy interface {
+	AddClientRegistrationPolicyConfig(
+		ctx context.Context,
+		realmName string,
+		policy *adapter.ClientRegistrationPolicy,
+	) error
 }
 
 type KOrganizations interface {

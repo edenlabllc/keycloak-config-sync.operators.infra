@@ -71,6 +71,39 @@ spec:
         consent.screen.text: ""
         display.on.consent.screen: "true"
 
+  # ClientRegistrationPolicy configures the Keycloak client registration policies found under
+  # Clients -> Client registration -> Authenticated/Anonymous access policies.
+  # Scopes which are already allowed, including the ones configured outside of the operator,
+  # are preserved - nothing is ever removed. If the realm has no such policy yet,
+  # it is created with allow-default-scopes enabled, matching the Keycloak default.
+  clientRegistrationPolicy:
+      # ProviderID is a provider ID of the client registration policy component. Required.
+    - providerId: "allowed-client-scopes"
+
+      # Config is a map of component configuration.
+      # Map key is a name of configuration property, map value is an array value of configuration properties.
+      # For the allowed-client-scopes policy the "allowed-client-scopes" key holds the client scope names,
+      # which are expected to exist in the realm, e.g. declared in the clientScope section above.
+      config:
+        allowed-client-scopes:
+          - "test-scope"
+          - "offline_access"
+        allow-default-scopes:
+          - "true"
+
+      # SubType is an access type of the policy.
+      # "authenticated" is "Authenticated access policies", "anonymous" is "Anonymous access policies".
+      #
+      # Enum: authenticated, anonymous
+      # Default: authenticated
+      subType: "authenticated"
+
+      # Name is a display name of the policy component.
+      # Only used when the policy does not exist in the realm yet and has to be created.
+      #
+      # Default: Allowed Client Scopes
+      name: "Allowed Client Scopes"
+
   client:
       # ClientId is a unique keycloak client ID referenced in URI and tokens.
     - clientId: "portal"
