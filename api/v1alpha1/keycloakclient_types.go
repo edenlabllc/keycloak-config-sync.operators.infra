@@ -376,6 +376,37 @@ type ScopePermissions struct {
 	Policies []string `json:"policies,omitempty"`
 }
 
+// ClientAllowedPolicy configures a Keycloak client registration policy, which constrains what
+// a client may request during dynamic client registration. In the Keycloak admin console the
+// policies live under Clients -> Client registration -> Authenticated/Anonymous access policies.
+// The config values are added to the ones already set on the policy, nothing is ever removed.
+type ClientAllowedPolicy struct {
+	// Name is a display name of the client registration policy component.
+	// It is only used when the policy does not exist in the realm yet and has to be created.
+	// +optional
+	// +kubebuilder:default="Allowed Client Scopes"
+	Name string `json:"name,omitempty"`
+
+	// ProviderID is a provider ID of the client registration policy component.
+	// +required
+	ProviderID string `json:"providerId"`
+
+	// SubType is an access type of the client registration policy.
+	// "authenticated" corresponds to "Authenticated access policies" and
+	// "anonymous" to "Anonymous access policies" in the Keycloak admin console.
+	// +optional
+	// +kubebuilder:default=authenticated
+	// +kubebuilder:validation:Enum=authenticated;anonymous
+	SubType string `json:"subType,omitempty"`
+
+	// Config is a map of component configuration.
+	// Map key is a name of configuration property, map value is an array value of configuration properties.
+	// +kubebuilder:example={"allow-default-scopes": ["client-scope-1"]}
+	// +nullable
+	// +optional
+	Config map[string][]string `json:"config,omitempty"`
+}
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -397,6 +428,11 @@ type KeycloakClientSpec struct {
 	// +nullable
 	// +optional
 	ClientScope *[]ClientScope `json:"clientScope,omitempty"`
+
+	// ClientRegistrationPolicy is a list of client allowed policy
+	// +nullable
+	// +optional
+	ClientRegistrationPolicy *[]ClientAllowedPolicy `json:"clientRegistrationPolicy,omitempty"`
 }
 
 // KeycloakClientStatus defines the observed state of KeycloakClient.

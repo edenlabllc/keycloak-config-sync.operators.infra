@@ -41,6 +41,69 @@ func (_m *MockClient) EXPECT() *MockClient_Expecter {
 	return &MockClient_Expecter{mock: &_m.Mock}
 }
 
+// AddClientRegistrationPolicyConfig provides a mock function for the type MockClient
+func (_mock *MockClient) AddClientRegistrationPolicyConfig(ctx context.Context, realmName string, policy *adapter.ClientRegistrationPolicy) error {
+	ret := _mock.Called(ctx, realmName, policy)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddClientRegistrationPolicyConfig")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *adapter.ClientRegistrationPolicy) error); ok {
+		r0 = returnFunc(ctx, realmName, policy)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockClient_AddClientRegistrationPolicyConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddClientRegistrationPolicyConfig'
+type MockClient_AddClientRegistrationPolicyConfig_Call struct {
+	*mock.Call
+}
+
+// AddClientRegistrationPolicyConfig is a helper method to define mock.On call
+//   - ctx context.Context
+//   - realmName string
+//   - policy *adapter.ClientRegistrationPolicy
+func (_e *MockClient_Expecter) AddClientRegistrationPolicyConfig(ctx interface{}, realmName interface{}, policy interface{}) *MockClient_AddClientRegistrationPolicyConfig_Call {
+	return &MockClient_AddClientRegistrationPolicyConfig_Call{Call: _e.mock.On("AddClientRegistrationPolicyConfig", ctx, realmName, policy)}
+}
+
+func (_c *MockClient_AddClientRegistrationPolicyConfig_Call) Run(run func(ctx context.Context, realmName string, policy *adapter.ClientRegistrationPolicy)) *MockClient_AddClientRegistrationPolicyConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 *adapter.ClientRegistrationPolicy
+		if args[2] != nil {
+			arg2 = args[2].(*adapter.ClientRegistrationPolicy)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockClient_AddClientRegistrationPolicyConfig_Call) Return(err error) *MockClient_AddClientRegistrationPolicyConfig_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockClient_AddClientRegistrationPolicyConfig_Call) RunAndReturn(run func(ctx context.Context, realmName string, policy *adapter.ClientRegistrationPolicy) error) *MockClient_AddClientRegistrationPolicyConfig_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // AddDefaultScopeToClient provides a mock function for the type MockClient
 func (_mock *MockClient) AddDefaultScopeToClient(ctx context.Context, realmName string, clientName string, scopes []adapter.ClientScope) error {
 	ret := _mock.Called(ctx, realmName, clientName, scopes)
@@ -3401,6 +3464,80 @@ func (_c *MockClient_GetComponent_Call) Return(component *adapter.Component, err
 }
 
 func (_c *MockClient_GetComponent_Call) RunAndReturn(run func(ctx context.Context, realmName string, componentName string) (*adapter.Component, error)) *MockClient_GetComponent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetComponents provides a mock function for the type MockClient
+func (_mock *MockClient) GetComponents(ctx context.Context, realmName string, params *adapter.GetComponentsParams) ([]adapter.Component, error) {
+	ret := _mock.Called(ctx, realmName, params)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetComponents")
+	}
+
+	var r0 []adapter.Component
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *adapter.GetComponentsParams) ([]adapter.Component, error)); ok {
+		return returnFunc(ctx, realmName, params)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *adapter.GetComponentsParams) []adapter.Component); ok {
+		r0 = returnFunc(ctx, realmName, params)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]adapter.Component)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, *adapter.GetComponentsParams) error); ok {
+		r1 = returnFunc(ctx, realmName, params)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockClient_GetComponents_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetComponents'
+type MockClient_GetComponents_Call struct {
+	*mock.Call
+}
+
+// GetComponents is a helper method to define mock.On call
+//   - ctx context.Context
+//   - realmName string
+//   - params *adapter.GetComponentsParams
+func (_e *MockClient_Expecter) GetComponents(ctx interface{}, realmName interface{}, params interface{}) *MockClient_GetComponents_Call {
+	return &MockClient_GetComponents_Call{Call: _e.mock.On("GetComponents", ctx, realmName, params)}
+}
+
+func (_c *MockClient_GetComponents_Call) Run(run func(ctx context.Context, realmName string, params *adapter.GetComponentsParams)) *MockClient_GetComponents_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 *adapter.GetComponentsParams
+		if args[2] != nil {
+			arg2 = args[2].(*adapter.GetComponentsParams)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockClient_GetComponents_Call) Return(components []adapter.Component, err error) *MockClient_GetComponents_Call {
+	_c.Call.Return(components, err)
+	return _c
+}
+
+func (_c *MockClient_GetComponents_Call) RunAndReturn(run func(ctx context.Context, realmName string, params *adapter.GetComponentsParams) ([]adapter.Component, error)) *MockClient_GetComponents_Call {
 	_c.Call.Return(run)
 	return _c
 }
