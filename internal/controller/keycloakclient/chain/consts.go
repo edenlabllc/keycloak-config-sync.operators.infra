@@ -17,6 +17,7 @@ const (
 	ConditionAuthorizationPoliciesSynced         = "AuthorizationPoliciesSynced"         // ProcessPolicy
 	ConditionAuthorizationPermissionsSynced      = "AuthorizationPermissionsSynced"      // ProcessPermissions
 	ConditionAdminFineGrainedPermissionsV1Synced = "AdminFineGrainedPermissionsV1Synced" // PutAdminFineGrainedPermissions
+	ConditionClientRegistrationPolicySynced      = "ClientRegistrationPolicySynced"      // PutAllowedClientScopes
 
 	// Success reasons - one per step
 	ReasonClientCreated                       = "ClientCreated"
@@ -31,6 +32,7 @@ const (
 	ReasonAuthorizationPoliciesSynced         = "AuthorizationPoliciesSynced"
 	ReasonAuthorizationPermissionsSynced      = "AuthorizationPermissionsSynced"
 	ReasonAdminFineGrainedPermissionsV1Synced = "AdminFineGrainedPermissionsV1Synced"
+	ReasonClientRegistrationPolicySynced      = "ClientRegistrationPolicySynced"
 	ReasonReconciliationSucceeded             = "ReconciliationSucceeded"
 
 	// Failure reasons - generic
