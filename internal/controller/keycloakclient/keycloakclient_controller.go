@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient/chain"
+	chainPolicy "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient/chain/policy"
 	chainScope "github.com/edenlabllc/keycloak-config-sync.operators.infra/internal/controller/keycloakclient/chain/scope"
 
 	keycloakApi "github.com/edenlabllc/keycloak-config-sync.operators.infra/api/v1alpha1"
@@ -192,6 +193,10 @@ func (r *ReconcileKeycloakClientSettings) tryReconcile(ctx context.Context, keyc
 
 	if err = chainScope.MakeChain(r.helper, kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
 		return fmt.Errorf("unable to serve keycloak client scope: %w", err)
+	}
+
+	if err = chainPolicy.MakeChain(r.helper, kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {
+		return fmt.Errorf("unable to serve keycloak client registration policy: %w", err)
 	}
 
 	if err = chainClient.MakeChain(r.helper, kClient, r.client).Serve(ctx, keycloakClientSettings, realm); err != nil {

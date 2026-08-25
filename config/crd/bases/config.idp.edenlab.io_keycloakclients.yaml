@@ -705,6 +705,53 @@ spec:
                   - clientId
                   type: object
                 type: array
+              clientRegistrationPolicy:
+                description: ClientRegistrationPolicy is a list of client allowed
+                  policy
+                items:
+                  description: |-
+                    ClientAllowedPolicy configures a Keycloak client registration policy, which constrains what
+                    a client may request during dynamic client registration. In the Keycloak admin console the
+                    policies live under Clients -> Client registration -> Authenticated/Anonymous access policies.
+                    The config values are added to the ones already set on the policy, nothing is ever removed.
+                  properties:
+                    config:
+                      additionalProperties:
+                        items:
+                          type: string
+                        type: array
+                      description: |-
+                        Config is a map of component configuration.
+                        Map key is a name of configuration property, map value is an array value of configuration properties.
+                      example:
+                        allow-default-scopes: '["client-scope-1"]'
+                      nullable: true
+                      type: object
+                    name:
+                      default: Allowed Client Scopes
+                      description: |-
+                        Name is a display name of the client registration policy component.
+                        It is only used when the policy does not exist in the realm yet and has to be created.
+                      type: string
+                    providerId:
+                      description: ProviderID is a provider ID of the client registration
+                        policy component.
+                      type: string
+                    subType:
+                      default: authenticated
+                      description: |-
+                        SubType is an access type of the client registration policy.
+                        "authenticated" corresponds to "Authenticated access policies" and
+                        "anonymous" to "Anonymous access policies" in the Keycloak admin console.
+                      enum:
+                      - authenticated
+                      - anonymous
+                      type: string
+                  required:
+                  - providerId
+                  type: object
+                nullable: true
+                type: array
               clientScope:
                 description: ClientScope is a list of client scopes.
                 items:
